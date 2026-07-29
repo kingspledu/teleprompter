@@ -374,6 +374,116 @@
             width: 100%;
             transition: width 0.1s linear;
         }
+
+        @media (orientation: landscape) and (max-height: 600px) {
+            #setup-container {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) minmax(220px, 32vw);
+                grid-template-rows: auto 1fr auto;
+                gap: 0.65rem 1rem;
+                padding: max(0.65rem, env(safe-area-inset-top)) max(0.85rem, env(safe-area-inset-right)) max(0.65rem, env(safe-area-inset-bottom)) max(0.85rem, env(safe-area-inset-left));
+            }
+
+            #setup-container h1 {
+                grid-column: 2;
+                grid-row: 1;
+                font-size: 1.35rem;
+                margin: 0;
+            }
+
+            #script-input {
+                grid-column: 1;
+                grid-row: 1 / 4;
+                min-height: 0;
+                margin: 0;
+                padding: 1rem;
+                border-radius: 12px;
+                font-size: 0.95rem;
+                line-height: 1.45;
+            }
+
+            .time-settings {
+                grid-column: 2;
+                grid-row: 2;
+                align-self: center;
+                gap: 0.65rem;
+                margin: 0;
+                padding: 0.75rem;
+                border-radius: 12px;
+            }
+
+            .time-inputs {
+                gap: 0.6rem;
+            }
+
+            .time-input-group {
+                gap: 0.25rem;
+            }
+
+            .time-input-group input {
+                width: 52px;
+                padding: 0.35rem;
+                font-size: 1rem;
+            }
+
+            .preset-buttons {
+                gap: 0.35rem;
+            }
+
+            .preset-btn {
+                padding: 0.4rem 0.65rem;
+                font-size: 0.72rem;
+            }
+
+            .start-btn {
+                grid-column: 2;
+                grid-row: 3;
+                padding: 0.75rem;
+                border-radius: 12px;
+                font-size: 1rem;
+            }
+
+            #prompter-container::before,
+            #prompter-container::after {
+                height: 18vh;
+            }
+
+            #text-display {
+                padding: 50vh max(1.25rem, env(safe-area-inset-right)) 50vh max(1.25rem, env(safe-area-inset-left));
+            }
+
+            .text-line {
+                max-width: min(82vw, 900px);
+                padding: 0.75rem 0;
+                font-size: clamp(1.3rem, 4.5vw, 2rem);
+                line-height: 1.25;
+            }
+
+            .text-line.active {
+                transform: scale(1.03);
+            }
+
+            #fixed-timer {
+                font-size: 0.75rem;
+                padding: 4px 10px;
+            }
+
+            #controls-container {
+                bottom: max(8px, env(safe-area-inset-bottom));
+                gap: 0.55rem;
+                padding: 0.35rem 0.7rem;
+                border-radius: 24px;
+            }
+
+            .control-btn {
+                padding: 0.35rem;
+            }
+
+            #play-pause-btn {
+                width: 40px;
+                height: 40px;
+            }
+        }
     </style>
 </head>
 <body>
