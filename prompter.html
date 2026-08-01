@@ -653,7 +653,7 @@
 
         <div class="start-actions">
             <button class="start-btn practice-start-btn" onclick="startPrompter(false)">연습 시작</button>
-            <button class="start-btn" onclick="startPrompter(true)">프롬프터 시작 v1.50</button>
+            <button class="start-btn" onclick="startPrompter(true)">프롬프터 시작 v1.51</button>
         </div>
     </div>
 
@@ -811,7 +811,7 @@
             html = html.replace('let isVerticalFlipped = false;', `let isVerticalFlipped = ${isVerticalFlipped};`);
 
             const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-            const fileName = `${importedJsonBaseName}_prompter_v1.50.html`;
+            const fileName = `${importedJsonBaseName}_prompter_v1.51.html`;
             if (navigator.msSaveOrOpenBlob) {
                 navigator.msSaveOrOpenBlob(blob, fileName);
                 return;
@@ -1204,20 +1204,14 @@
 
                 // 4. 스크롤 위치 계산 (현재 줄을 화면 정중앙 50vh에 위치)
                 const currentLineData = linesData[currentLineIndex];
-                let targetScroll = 0;
+                const currentLineElement = document.getElementById(`line-${currentLineIndex}`);
+                const containerRect = prompterContainer.getBoundingClientRect();
+                const currentRect = currentLineElement.getBoundingClientRect();
+                const currentCenter = currentRect.top + (currentRect.height / 2);
+                const viewportCenter = containerRect.top + (containerRect.height / 2);
+                const targetScroll = prompterContainer.scrollTop + currentCenter - viewportCenter;
 
-                if (currentLineIndex < linesData.length - 1) {
-                    const nextLineData = linesData[currentLineIndex + 1];
-                    const distanceToNext = nextLineData.offsetTop - currentLineData.offsetTop;
-                    // 현재 줄 오프셋 + (다음줄까지의 거리 * 진행률) - (화면 절반) + (현재줄 높이 절반)
-                    targetScroll = currentLineData.offsetTop + (distanceToNext * lineProgress) - (prompterContainer.clientHeight / 2) + (currentLineData.height / 2);
-                } else {
-                    targetScroll = currentLineData.offsetTop - (prompterContainer.clientHeight / 2) + (currentLineData.height / 2);
-                }
-
-                targetScroll -= getHighlightLineOffset(currentLineData);
-                targetScroll = keepActiveLineInSafeArea(targetScroll, currentLineData);
-                prompterContainer.scrollTop = targetScroll;
+                prompterContainer.scrollTop = Math.max(0, targetScroll);
                 updateActiveLine(currentLineIndex);
                 updateTimerPosition(currentLineIndex);
 
@@ -1245,12 +1239,16 @@
 
         function centerActiveLine(lineIndex = activeLineIndex) {
             const lineData = linesData[lineIndex];
-            if (!lineData || !prompterContainer.classList.contains('active')) return;
+            const lineElement = document.getElementById(`line-${lineIndex}`);
+            if (!lineData || !lineElement || !prompterContainer.classList.contains('active')) return;
 
-            const centeredScroll = lineData.offsetTop
-                - (prompterContainer.clientHeight / 2)
-                + (lineData.height / 2);
-            prompterContainer.scrollTop = Math.max(0, centeredScroll);
+            const containerRect = prompterContainer.getBoundingClientRect();
+            const lineRect = lineElement.getBoundingClientRect();
+            const lineCenter = lineRect.top + (lineRect.height / 2);
+            const viewportCenter = containerRect.top + (containerRect.height / 2);
+            prompterContainer.scrollTop = Math.max(0,
+                prompterContainer.scrollTop + lineCenter - viewportCenter
+            );
             updateActiveLine(lineIndex);
             updateTimerPosition(lineIndex);
         }
