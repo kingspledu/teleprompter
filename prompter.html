@@ -631,7 +631,57 @@
             <input type="file" id="json-file-input" accept=".json,application/json" hidden>
             <button type="button" class="html-download-btn" id="html-download-btn" onclick="downloadConfiguredHtml()" disabled>설정 HTML 다운로드</button>
         </div>
-                <textarea id="script-input" placeholder="여기에 읽을 대본을 입력하세요..."></textarea>
+                <textarea id="script-input" placeholder="여기에 읽을 대본을 입력하세요...">Hello, everyone.
+My name is Sol,
+and I go to Jeo-Chung Elementary School.
+One day,
+while watching the news with my father,
+I saw a drone
+rescue a person
+who was lost deep in the mountains.
+I asked my dad
+how it could fly and save people.
+That was the moment
+I realized
+science can actually save lives,
+just like a superhero.
+My father explained
+science is everywhere
+to help us.
+Thanks to science,
+we have better medicine
+to cure sick people,
+airplanes can fly safely
+across the world,
+and even our car’s navigation system
+uses math and satellites
+to guide us
+on family trips.
+I thought
+that was amazing!
+Learning about all these useful inventions
+gave me a big dream:
+I want to become a scientist.
+To make my dream come true,
+I read science books,
+do simple experiments,
+and ask lots of questions.
+Of course,
+I also study English hard!
+With English,
+I can learn so much more
+about the world,
+and share my ideas
+with friends from other countries.
+I am small,
+but my dream is big.
+Someday,
+as a great scientist,
+I will invent things
+that make everyday life happier
+for everyone here.
+Thank you
+for listening to my story.</textarea>
         
         <div class="time-settings">
             <div class="time-inputs">
@@ -653,7 +703,7 @@
 
         <div class="start-actions">
             <button class="start-btn practice-start-btn" onclick="startPrompter(false)">연습 시작</button>
-            <button class="start-btn" onclick="startPrompter(true)">프롬프터 시작 v1.53</button>
+            <button class="start-btn" onclick="startPrompter(true)">프롬프터 시작 v1.54</button>
         </div>
     </div>
 
@@ -811,7 +861,7 @@
             html = html.replace('let isVerticalFlipped = false;', `let isVerticalFlipped = ${isVerticalFlipped};`);
 
             const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-            const fileName = `${importedJsonBaseName}_prompter_v1.53.html`;
+            const fileName = `${importedJsonBaseName}_prompter_v1.54.html`;
             if (navigator.msSaveOrOpenBlob) {
                 navigator.msSaveOrOpenBlob(blob, fileName);
                 return;
