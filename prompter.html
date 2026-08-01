@@ -303,6 +303,33 @@
             will-change: transform;
         }
 
+        #edge-glow {
+            position: fixed;
+            top: 22%;
+            bottom: 22%;
+            width: 8vw;
+            max-width: 72px;
+            min-width: 28px;
+            z-index: 12;
+            opacity: 0;
+            pointer-events: none;
+            filter: blur(14px);
+            transition: opacity 0.35s ease;
+        }
+
+        #prompter-container.active #edge-glow { opacity: 0.18; }
+
+        #edge-glow.left {
+            left: -2vw;
+            right: auto;
+            background: radial-gradient(ellipse at left center, rgba(255, 244, 170, 0.7) 0%, rgba(255, 244, 170, 0.22) 42%, transparent 75%);
+        }
+
+        #edge-glow.right {
+            right: -2vw;
+            left: auto;
+            background: radial-gradient(ellipse at right center, rgba(255, 244, 170, 0.7) 0%, rgba(255, 244, 170, 0.22) 42%, transparent 75%);
+        }
         #fixed-timer {
             position: fixed;
             top: 50vh;
@@ -703,12 +730,13 @@ for listening to my story.</textarea>
 
         <div class="start-actions">
             <button class="start-btn practice-start-btn" onclick="startPrompter(false)">연습 시작</button>
-            <button class="start-btn" onclick="startPrompter(true)">프롬프터 시작 v1.55</button>
+            <button class="start-btn" onclick="startPrompter(true)">프롬프터 시작 v1.57</button>
         </div>
     </div>
 
     <div id="prompter-container">
         <!-- 상단 고정 타이머 -->
+        <div id="edge-glow" class="left" aria-hidden="true"></div>
         <div id="fixed-timer">00:00.00</div>
         
         <div id="text-display">
@@ -792,6 +820,7 @@ for listening to my story.</textarea>
         const countdownOverlay = document.getElementById('countdown-overlay');
         const countdownNumber = document.getElementById('countdown-number');
         const fixedTimer = document.getElementById('fixed-timer');
+        const edgeGlow = document.getElementById('edge-glow');
         const minutesInput = document.getElementById('minutes-input');
         const secondsInput = document.getElementById('seconds-input');
         const jsonFileInput = document.getElementById('json-file-input');
@@ -861,7 +890,7 @@ for listening to my story.</textarea>
             html = html.replace('let isVerticalFlipped = false;', `let isVerticalFlipped = ${isVerticalFlipped};`);
 
             const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-            const fileName = `${importedJsonBaseName}_prompter_v1.55.html`;
+            const fileName = `${importedJsonBaseName}_prompter_v1.57.html`;
             if (navigator.msSaveOrOpenBlob) {
                 navigator.msSaveOrOpenBlob(blob, fileName);
                 return;
@@ -1019,6 +1048,7 @@ for listening to my story.</textarea>
         }
 
         function updateActiveLine(currentIndex) {
+            edgeGlow.className = currentIndex % 2 === 0 ? 'left' : 'right';
             document.querySelectorAll('.text-line').forEach((el, index) => {
                 // 클래스 초기화
                 el.className = 'text-line'; 
@@ -1066,6 +1096,14 @@ for listening to my story.</textarea>
                 + sentencePauses
             );
         }
+
+        function formatPrompterLine(text) {
+            if (!text || !text.trim()) return '&nbsp;';
+
+            const trimmedText = text.trim();
+            const endsSentence = /[.!?。？！…]["'’”)}\]]*$/.test(trimmedText);
+            return endsSentence ? text : `${text} →`;
+        }
         function startPrompter(usePrompterMirror) {
             if (typeof usePrompterMirror === 'boolean') {
                 isPrompterMode = usePrompterMirror;
@@ -1104,7 +1142,7 @@ for listening to my story.</textarea>
 
                 return `<div class="text-line" id="line-${index}" onclick="jumpToLine(${index})">
                     <span class="text-span">
-                        ${data.text || '&nbsp;'}
+                        ${formatPrompterLine(data.text)}
                         <div class="line-progress-track">
                             <div class="line-progress-fill" id="line-fill-${index}"></div>
                         </div>
