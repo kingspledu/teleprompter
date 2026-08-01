@@ -75,10 +75,13 @@
         .script-import {
             display: flex;
             justify-content: flex-end;
+            gap: 0.5rem;
+            flex-wrap: wrap;
             margin-bottom: 0.65rem;
         }
 
-        .json-import-btn {
+        .json-import-btn,
+        .html-download-btn {
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 10px;
             background: rgba(255, 255, 255, 0.1);
@@ -89,10 +92,15 @@
             cursor: pointer;
         }
 
-        .json-import-btn:active {
+        .json-import-btn:active,
+        .html-download-btn:active {
             background: rgba(255, 255, 255, 0.22);
         }
 
+        .html-download-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
         .time-settings {
             display: flex;
             flex-direction: column;
@@ -444,7 +452,8 @@
                 margin: 0;
             }
 
-            .json-import-btn {
+            .json-import-btn,
+        .html-download-btn {
                 width: 100%;
                 padding: 0.5rem;
                 font-size: 0.82rem;
@@ -569,6 +578,7 @@
         <div class="script-import">
             <button type="button" class="json-import-btn" onclick="jsonFileInput.click()">JSON 원고 불러오기</button>
             <input type="file" id="json-file-input" accept=".json,application/json" hidden>
+            <button type="button" class="html-download-btn" id="html-download-btn" onclick="downloadConfiguredHtml()" disabled>설정 HTML 다운로드</button>
         </div>
                 <textarea id="script-input" placeholder="여기에 읽을 대본을 입력하세요..."></textarea>
         
@@ -590,7 +600,7 @@
             </div>
         </div>
 
-        <button class="start-btn" onclick="startPrompter()">프롬프터 시작 v1.3</button>
+        <button class="start-btn" onclick="startPrompter()">프롬프터 시작 v1.41</button>
     </div>
 
     <div id="prompter-container">
@@ -649,6 +659,7 @@
         let textSizeLevel = 0;
         let isHorizontalFlipped = false;
         let isVerticalFlipped = false;
+        let importedJsonBaseName = 'iPrompter';
 
         if (!Array.prototype.flatMap) {
             Array.prototype.flatMap = function (callback, thisArg) {
@@ -679,6 +690,7 @@
         const minutesInput = document.getElementById('minutes-input');
         const secondsInput = document.getElementById('seconds-input');
         const jsonFileInput = document.getElementById('json-file-input');
+        const htmlDownloadBtn = document.getElementById('html-download-btn');
         const controlsContainer = document.getElementById('controls-container');
         const flipHorizontalBtn = document.getElementById('flip-horizontal-btn');
         const flipVerticalBtn = document.getElementById('flip-vertical-btn');
@@ -717,6 +729,48 @@
             return null;
         }
 
+
+        function downloadConfiguredHtml() {
+            const clone = document.documentElement.cloneNode(true);
+            const clonedSetup = clone.querySelector('#setup-container');
+            const clonedPrompter = clone.querySelector('#prompter-container');
+            const clonedTextDisplay = clone.querySelector('#text-display');
+            const clonedTextarea = clone.querySelector('#script-input');
+            const clonedMinutes = clone.querySelector('#minutes-input');
+            const clonedSeconds = clone.querySelector('#seconds-input');
+            const clonedDownloadButton = clone.querySelector('#html-download-btn');
+
+            clonedSetup.classList.remove('hidden');
+            clonedPrompter.classList.remove('active', 'flip-horizontal', 'flip-vertical');
+            clonedTextDisplay.innerHTML = '';
+            clonedTextarea.textContent = scriptInput.value;
+            clonedMinutes.setAttribute('value', minutesInput.value || '0');
+            clonedSeconds.setAttribute('value', secondsInput.value || '0');
+            clonedDownloadButton.removeAttribute('disabled');
+
+            let html = '<!DOCTYPE html>\n' + clone.outerHTML;
+            const embeddedScript = `scriptInput.value = ${JSON.stringify(scriptInput.value)};`;
+            html = html.replace(/scriptInput\.value\s*=\s*`[\s\S]*?`;/, embeddedScript);
+            html = html.replace('let textSizeLevel = 0;', `let textSizeLevel = ${textSizeLevel};`);
+            html = html.replace('let isHorizontalFlipped = false;', `let isHorizontalFlipped = ${isHorizontalFlipped};`);
+            html = html.replace('let isVerticalFlipped = false;', `let isVerticalFlipped = ${isVerticalFlipped};`);
+
+            const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+            const fileName = `${importedJsonBaseName}_prompter_v1.41.html`;
+            if (navigator.msSaveOrOpenBlob) {
+                navigator.msSaveOrOpenBlob(blob, fileName);
+                return;
+            }
+
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
         jsonFileInput.addEventListener('change', async event => {
             const file = event.target.files[0];
             if (!file) return;
@@ -734,6 +788,8 @@
                     .map(line => line.trim())
                     .filter(Boolean)
                     .join('\n');
+                importedJsonBaseName = file.name.replace(/\.json$/i, '') || 'iPrompter';
+                htmlDownloadBtn.disabled = false;
             } catch (error) {
                 alert(`JSON 파일을 읽을 수 없습니다.\n${error.message}`);
             } finally {
@@ -960,7 +1016,7 @@
 
         function getHighlightLineOffset(lineData) {
             const viewportHeight = prompterContainer.clientHeight;
-            return Math.min(viewportHeight * 0.16, lineData.height + 16);
+            return Math.min(viewportHeight * 0.28, (lineData.height + 16) * 2);
         }
         function keepActiveLineInSafeArea(targetScroll, lineData) {
             const viewportHeight = prompterContainer.clientHeight;
