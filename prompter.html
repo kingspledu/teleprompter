@@ -305,30 +305,43 @@
 
         #edge-glow {
             position: fixed;
-            top: 22%;
-            bottom: 22%;
-            width: 8vw;
-            max-width: 72px;
-            min-width: 28px;
+            top: 10%;
+            bottom: 10%;
+            width: 16vw;
+            max-width: 150px;
+            min-width: 54px;
             z-index: 12;
             opacity: 0;
             pointer-events: none;
-            filter: blur(14px);
+            -webkit-filter: blur(10px);
+            filter: blur(10px);
             transition: opacity 0.35s ease;
         }
 
-        #prompter-container.active #edge-glow { opacity: 0.18; }
+        #prompter-container.active #edge-glow { opacity: 0.42; }
 
         #edge-glow.left {
-            left: -2vw;
+            left: -1vw;
             right: auto;
-            background: radial-gradient(ellipse at left center, rgba(255, 244, 170, 0.7) 0%, rgba(255, 244, 170, 0.22) 42%, transparent 75%);
+            background: radial-gradient(ellipse at left center, rgba(255, 239, 105, 0.9) 0%, rgba(255, 244, 170, 0.48) 38%, transparent 82%);
         }
 
         #edge-glow.right {
-            right: -2vw;
+            right: -1vw;
             left: auto;
-            background: radial-gradient(ellipse at right center, rgba(255, 244, 170, 0.7) 0%, rgba(255, 244, 170, 0.22) 42%, transparent 75%);
+            background: radial-gradient(ellipse at right center, rgba(255, 239, 105, 0.9) 0%, rgba(255, 244, 170, 0.48) 38%, transparent 82%);
+        }
+        #edge-glow.left { transform-origin: left center; }
+        #edge-glow.right { transform-origin: right center; }
+
+        #edge-glow.pulse {
+            animation: edgeCuePulse 0.9s ease-out;
+        }
+
+        @keyframes edgeCuePulse {
+            0% { opacity: 0.12; transform: scaleX(0.72); }
+            28% { opacity: 0.72; transform: scaleX(1.08); }
+            100% { opacity: 0.42; transform: scaleX(1); }
         }
         #fixed-timer {
             position: fixed;
@@ -730,7 +743,7 @@ for listening to my story.</textarea>
 
         <div class="start-actions">
             <button class="start-btn practice-start-btn" onclick="startPrompter(false)">연습 시작</button>
-            <button class="start-btn" onclick="startPrompter(true)">프롬프터 시작 v1.57</button>
+            <button class="start-btn" onclick="startPrompter(true)">프롬프터 시작 v1.58</button>
         </div>
     </div>
 
@@ -788,6 +801,7 @@ for listening to my story.</textarea>
         let isCountingDown = false;
         let wakeLock = null;
         let activeLineIndex = 0;
+        let lastGlowLineIndex = -1;
         let textSizeLevel = 2;
         let isHorizontalFlipped = false;
         let isVerticalFlipped = false;
@@ -890,7 +904,7 @@ for listening to my story.</textarea>
             html = html.replace('let isVerticalFlipped = false;', `let isVerticalFlipped = ${isVerticalFlipped};`);
 
             const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-            const fileName = `${importedJsonBaseName}_prompter_v1.57.html`;
+            const fileName = `${importedJsonBaseName}_prompter_v1.58.html`;
             if (navigator.msSaveOrOpenBlob) {
                 navigator.msSaveOrOpenBlob(blob, fileName);
                 return;
@@ -1048,7 +1062,12 @@ for listening to my story.</textarea>
         }
 
         function updateActiveLine(currentIndex) {
-            edgeGlow.className = currentIndex % 2 === 0 ? 'left' : 'right';
+            if (currentIndex !== lastGlowLineIndex) {
+                lastGlowLineIndex = currentIndex;
+                edgeGlow.className = currentIndex % 2 === 0 ? 'left' : 'right';
+                void edgeGlow.offsetWidth;
+                edgeGlow.classList.add('pulse');
+            }
             document.querySelectorAll('.text-line').forEach((el, index) => {
                 // 클래스 초기화
                 el.className = 'text-line'; 
@@ -1250,6 +1269,7 @@ for listening to my story.</textarea>
             });
         }
         function resetPrompterState() {
+            lastGlowLineIndex = -1;
             prompterContainer.scrollTop = 0;
             progressBar.style.width = '100%';
             updateActiveLine(0);
