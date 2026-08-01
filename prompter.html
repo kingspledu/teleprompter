@@ -172,6 +172,22 @@
             transition: transform 0.1s;
         }
 
+        .start-actions {
+            display: flex;
+            gap: 0.75rem;
+            width: 100%;
+        }
+
+        .start-actions .start-btn {
+            flex: 1;
+        }
+
+        .practice-start-btn {
+            background: rgba(255, 255, 255, 0.14);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.28);
+            box-shadow: none;
+        }
         .start-btn:active {
             transform: scale(0.98);
         }
@@ -503,6 +519,11 @@
                 font-size: 0.72rem;
             }
 
+            .start-actions {
+                grid-column: 2;
+                grid-row: 3;
+            }
+
             .start-btn {
                 grid-column: 2;
                 grid-row: 3;
@@ -600,7 +621,10 @@
             </div>
         </div>
 
-        <button class="start-btn" onclick="startPrompter()">프롬프터 시작 v1.41</button>
+        <div class="start-actions">
+            <button class="start-btn practice-start-btn" onclick="startPrompter(false)">연습 시작</button>
+            <button class="start-btn" onclick="startPrompter(true)">프롬프터 시작 v1.42</button>
+        </div>
     </div>
 
     <div id="prompter-container">
@@ -656,7 +680,7 @@
         let isCountingDown = false;
         let wakeLock = null;
         let activeLineIndex = 0;
-        let textSizeLevel = 0;
+        let textSizeLevel = 2;
         let isHorizontalFlipped = false;
         let isVerticalFlipped = false;
         let importedJsonBaseName = 'iPrompter';
@@ -756,7 +780,7 @@
             html = html.replace('let isVerticalFlipped = false;', `let isVerticalFlipped = ${isVerticalFlipped};`);
 
             const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-            const fileName = `${importedJsonBaseName}_prompter_v1.41.html`;
+            const fileName = `${importedJsonBaseName}_prompter_v1.42.html`;
             if (navigator.msSaveOrOpenBlob) {
                 navigator.msSaveOrOpenBlob(blob, fileName);
                 return;
@@ -945,7 +969,10 @@
 
             return Math.max(1, speakingWeight) + commaPauses + sentencePauses + phrasePauses + minimumLineTime;
         }
-        function startPrompter() {
+        function startPrompter(usePrompterMirror) {
+            if (typeof usePrompterMirror === 'boolean') {
+                isVerticalFlipped = usePrompterMirror;
+            }
             const text = scriptInput.value.trim();
             if (!text) return;
 
