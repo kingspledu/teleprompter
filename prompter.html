@@ -579,18 +579,18 @@
                     <label>분</label>
                 </div>
                 <div class="time-input-group">
-                    <input type="number" id="seconds-input" min="0" max="59" value="20">
+                    <input type="number" id="seconds-input" min="0" max="59" value="35">
                     <label>초</label>
                 </div>
             </div>
             <div class="preset-buttons">
-                <button class="preset-btn" onclick="setPreset(0, 20)">기본 (20초)</button>
+                <button class="preset-btn" onclick="setPreset(0, 35)">기본 (35초)</button>
                 <button class="preset-btn" onclick="setPreset(1, 45)">3,4학년 (1분 45초)</button>
                 <button class="preset-btn" onclick="setPreset(2, 45)">5,6학년 (2분 45초)</button>
             </div>
         </div>
 
-        <button class="start-btn" onclick="startPrompter()">프롬프터 시작</button>
+        <button class="start-btn" onclick="startPrompter()">프롬프터 시작 v1.3</button>
     </div>
 
     <div id="prompter-container">
@@ -956,6 +956,28 @@
             });
         }
 
+
+
+        function getHighlightLineOffset(lineData) {
+            const viewportHeight = prompterContainer.clientHeight;
+            return Math.min(viewportHeight * 0.16, lineData.height + 16);
+        }
+        function keepActiveLineInSafeArea(targetScroll, lineData) {
+            const viewportHeight = prompterContainer.clientHeight;
+            const controlsRect = controlsContainer.getBoundingClientRect();
+            const safeTop = Math.max(16, viewportHeight * 0.22);
+            const safeBottom = Math.min(viewportHeight * 0.78, controlsRect.top - 48);
+            const visualMargin = Math.max(8, lineData.height * 0.06);
+            const minimumScroll = lineData.offsetTop + lineData.height + visualMargin - safeBottom;
+            const maximumScroll = lineData.offsetTop - visualMargin - safeTop;
+
+            if (minimumScroll <= maximumScroll) {
+                return Math.max(0, Math.min(maximumScroll, Math.max(minimumScroll, targetScroll)));
+            }
+
+            const safeCenter = (safeTop + safeBottom) / 2;
+            return Math.max(0, lineData.offsetTop + (lineData.height / 2) - safeCenter);
+        }
         function step(timestamp) {
             if (!startTime) startTime = timestamp;
             
@@ -1005,6 +1027,8 @@
                     targetScroll = currentLineData.offsetTop - (prompterContainer.clientHeight / 2) + (currentLineData.height / 2);
                 }
 
+                targetScroll -= getHighlightLineOffset(currentLineData);
+                targetScroll = keepActiveLineInSafeArea(targetScroll, currentLineData);
                 prompterContainer.scrollTop = targetScroll;
                 updateActiveLine(currentLineIndex);
                 updateTimerPosition(currentLineIndex);
@@ -1073,7 +1097,8 @@
             pausedTime = targetLine.startTime;
             
             // 시각적 업데이트 강제 실행
-            prompterContainer.scrollTop = targetLine.offsetTop - (prompterContainer.clientHeight / 2) + (targetLine.height / 2);
+            const centeredScroll = targetLine.offsetTop - (prompterContainer.clientHeight / 2) + (targetLine.height / 2);
+            prompterContainer.scrollTop = keepActiveLineInSafeArea(centeredScroll - getHighlightLineOffset(targetLine), targetLine);
             updateActiveLine(index);
             const totalMs = (parseInt(minutesInput.value || 0) * 60 + parseInt(secondsInput.value || 0)) * 1000;
             updateTimerDisplay(pausedTime);
@@ -1108,6 +1133,9 @@
 
         window.addEventListener('resize', refreshResponsiveTextSize);
         window.addEventListener('orientationchange', () => setTimeout(refreshResponsiveTextSize, 250));
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', refreshResponsiveTextSize);
+        }
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible' && isPlaying) {
                 requestWakeLock();
