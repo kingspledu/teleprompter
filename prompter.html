@@ -703,7 +703,7 @@ for listening to my story.</textarea>
 
         <div class="start-actions">
             <button class="start-btn practice-start-btn" onclick="startPrompter(false)">연습 시작</button>
-            <button class="start-btn" onclick="startPrompter(true)">프롬프터 시작 v1.54</button>
+            <button class="start-btn" onclick="startPrompter(true)">프롬프터 시작 v1.55</button>
         </div>
     </div>
 
@@ -861,7 +861,7 @@ for listening to my story.</textarea>
             html = html.replace('let isVerticalFlipped = false;', `let isVerticalFlipped = ${isVerticalFlipped};`);
 
             const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-            const fileName = `${importedJsonBaseName}_prompter_v1.54.html`;
+            const fileName = `${importedJsonBaseName}_prompter_v1.55.html`;
             if (navigator.msSaveOrOpenBlob) {
                 navigator.msSaveOrOpenBlob(blob, fileName);
                 return;
@@ -1189,7 +1189,7 @@ for listening to my story.</textarea>
                     track.style.left = `${(rect.left - spanRect.left) / measurementScale}px`;
                     track.style.top = `${(rect.bottom - spanRect.top) / measurementScale + localGap}px`;
                     track.style.bottom = 'auto';
-                    track.style.width = ${localWidth}px;
+                    track.style.width = `${localWidth}px`;
                     track.style.height = `${localHeight}px`;
                     fill.className = 'line-progress-fill';
                     fill.dataset.segmentStart = segmentStart;
