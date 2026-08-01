@@ -347,7 +347,9 @@
             border-radius: 30px;
             display: flex;
             align-items: center;
-            gap: 1.5rem;
+            gap: 0.45rem;
+            max-width: calc(100% - 16px);
+            overflow-x: auto;
             z-index: 30;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             transition: bottom 0.3s ease;
@@ -384,6 +386,24 @@
             background: #e0e0e0;
         }
 
+        .control-btn.compact-label {
+            border-radius: 10px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .control-btn.is-active {
+            background: #ffffff;
+            color: #000000;
+        }
+
+        #prompter-container.flip-horizontal .text-span { transform: scaleX(-1); }
+        #prompter-container.flip-vertical .text-span { transform: scaleY(-1); }
+        #prompter-container.flip-horizontal.flip-vertical .text-span { transform: scale(-1, -1); }
+        #prompter-container.flip-horizontal #fixed-timer { transform: translateX(-50%) scaleX(-1); }
+        #prompter-container.flip-vertical #fixed-timer { transform: translateX(-50%) scaleY(-1); }
+        #prompter-container.flip-horizontal.flip-vertical #fixed-timer { transform: translateX(-50%) scale(-1, -1); }
         #progress-container {
             position: fixed;
             bottom: 0;
@@ -589,6 +609,10 @@
             </button>
             
             <!-- 재생/일시정지 버튼 -->
+            <button class="control-btn compact-label" onclick="changeTextSize(-1)" title="글자 작게" aria-label="글자 작게">A−</button>
+            <button class="control-btn compact-label" onclick="changeTextSize(1)" title="글자 크게" aria-label="글자 크게">A＋</button>
+            <button class="control-btn compact-label" id="flip-horizontal-btn" onclick="toggleHorizontalFlip()" title="좌우 반전" aria-label="좌우 반전">좌우</button>
+            <button class="control-btn compact-label" id="flip-vertical-btn" onclick="toggleVerticalFlip()" title="상하 반전" aria-label="상하 반전">상하</button>
             <button class="control-btn" id="play-pause-btn" onclick="togglePlay()" title="재생/일시정지">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="black"><path d="M8 5v14l11-7z"/></svg>
             </button>
@@ -622,6 +646,9 @@
         let isCountingDown = false;
         let wakeLock = null;
         let activeLineIndex = 0;
+        let textSizeLevel = 0;
+        let isHorizontalFlipped = false;
+        let isVerticalFlipped = false;
 
         if (!Array.prototype.flatMap) {
             Array.prototype.flatMap = function (callback, thisArg) {
@@ -653,6 +680,8 @@
         const secondsInput = document.getElementById('seconds-input');
         const jsonFileInput = document.getElementById('json-file-input');
         const controlsContainer = document.getElementById('controls-container');
+        const flipHorizontalBtn = document.getElementById('flip-horizontal-btn');
+        const flipVerticalBtn = document.getElementById('flip-vertical-btn');
         async function requestWakeLock() {
             if (!('wakeLock' in navigator) || wakeLock) return;
 
@@ -743,6 +772,39 @@
             const controlsTop = controlsContainer ? controlsContainer.getBoundingClientRect().top : window.innerHeight;
             const top = Math.min(lineRect.bottom + 10, controlsTop - timerHeight - 8);
             fixedTimer.style.top = `${Math.max(8, top)}px`;
+        }
+
+        function applyPrompterView() {
+            const sizeMultiplier = Math.pow(1.15, textSizeLevel);
+            document.querySelectorAll('.text-line').forEach(line => {
+                if (!line.dataset.baseFontSize) {
+                    line.dataset.baseFontSize = parseFloat(window.getComputedStyle(line).fontSize);
+                }
+                line.style.fontSize = `${line.dataset.baseFontSize * sizeMultiplier}px`;
+            });
+
+            prompterContainer.classList.toggle('flip-horizontal', isHorizontalFlipped);
+            prompterContainer.classList.toggle('flip-vertical', isVerticalFlipped);
+            flipHorizontalBtn.classList.toggle('is-active', isHorizontalFlipped);
+            flipVerticalBtn.classList.toggle('is-active', isVerticalFlipped);
+            flipHorizontalBtn.setAttribute('aria-pressed', String(isHorizontalFlipped));
+            flipVerticalBtn.setAttribute('aria-pressed', String(isVerticalFlipped));
+            setTimeout(refreshLayout, 0);
+        }
+
+        function changeTextSize(direction) {
+            textSizeLevel = Math.max(-4, Math.min(5, textSizeLevel + direction));
+            applyPrompterView();
+        }
+
+        function toggleHorizontalFlip() {
+            isHorizontalFlipped = !isHorizontalFlipped;
+            applyPrompterView();
+        }
+
+        function toggleVerticalFlip() {
+            isVerticalFlipped = !isVerticalFlipped;
+            applyPrompterView();
         }
         function enterFullscreen() {
             const elem = document.documentElement;
@@ -866,6 +928,8 @@
                     </span>
                 </div>`;
             }).join('');
+
+            applyPrompterView();
 
             // 초기화 후 카운트다운 시작
             setTimeout(() => {
@@ -1034,8 +1098,16 @@
             updateTimerPosition(activeLineIndex);
         }
 
-        window.addEventListener('resize', refreshLayout);
-        window.addEventListener('orientationchange', () => setTimeout(refreshLayout, 250));
+        function refreshResponsiveTextSize() {
+            document.querySelectorAll('.text-line').forEach(line => {
+                line.style.fontSize = '';
+                delete line.dataset.baseFontSize;
+            });
+            applyPrompterView();
+        }
+
+        window.addEventListener('resize', refreshResponsiveTextSize);
+        window.addEventListener('orientationchange', () => setTimeout(refreshResponsiveTextSize, 250));
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible' && isPlaying) {
                 requestWakeLock();
