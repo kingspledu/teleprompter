@@ -623,7 +623,7 @@
 
         <div class="start-actions">
             <button class="start-btn practice-start-btn" onclick="startPrompter(false)">연습 시작</button>
-            <button class="start-btn" onclick="startPrompter(true)">프롬프터 시작 v1.42</button>
+            <button class="start-btn" onclick="startPrompter(true)">프롬프터 시작 v1.43</button>
         </div>
     </div>
 
@@ -683,6 +683,7 @@
         let textSizeLevel = 2;
         let isHorizontalFlipped = false;
         let isVerticalFlipped = false;
+        let isPrompterMode = false;
         let importedJsonBaseName = 'iPrompter';
 
         if (!Array.prototype.flatMap) {
@@ -775,12 +776,12 @@
             let html = '<!DOCTYPE html>\n' + clone.outerHTML;
             const embeddedScript = `scriptInput.value = ${JSON.stringify(scriptInput.value)};`;
             html = html.replace(/scriptInput\.value\s*=\s*`[\s\S]*?`;/, embeddedScript);
-            html = html.replace('let textSizeLevel = 0;', `let textSizeLevel = ${textSizeLevel};`);
+            html = html.replace(/let textSizeLevel = -?\d+;/, `let textSizeLevel = ${textSizeLevel};`);
             html = html.replace('let isHorizontalFlipped = false;', `let isHorizontalFlipped = ${isHorizontalFlipped};`);
             html = html.replace('let isVerticalFlipped = false;', `let isVerticalFlipped = ${isVerticalFlipped};`);
 
             const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-            const fileName = `${importedJsonBaseName}_prompter_v1.42.html`;
+            const fileName = `${importedJsonBaseName}_prompter_v1.43.html`;
             if (navigator.msSaveOrOpenBlob) {
                 navigator.msSaveOrOpenBlob(blob, fileName);
                 return;
@@ -847,13 +848,17 @@
             if (!activeLine) return;
 
             activeLineIndex = currentIndex;
+            if (isPrompterMode) {
+                fixedTimer.style.top = `${Math.max(16, window.innerHeight * 0.08)}px`;
+                return;
+            }
+
             const lineRect = activeLine.getBoundingClientRect();
             const timerHeight = fixedTimer.offsetHeight || 30;
             const controlsTop = controlsContainer ? controlsContainer.getBoundingClientRect().top : window.innerHeight;
             const top = Math.min(lineRect.bottom + 10, controlsTop - timerHeight - 8);
             fixedTimer.style.top = `${Math.max(8, top)}px`;
         }
-
         function applyPrompterView() {
             const sizeMultiplier = Math.pow(1.15, textSizeLevel);
             document.querySelectorAll('.text-line').forEach(line => {
@@ -971,8 +976,10 @@
         }
         function startPrompter(usePrompterMirror) {
             if (typeof usePrompterMirror === 'boolean') {
+                isPrompterMode = usePrompterMirror;
                 isVerticalFlipped = usePrompterMirror;
             }
+            textSizeLevel = 2;
             const text = scriptInput.value.trim();
             if (!text) return;
 
@@ -1042,6 +1049,8 @@
 
 
         function getHighlightLineOffset(lineData) {
+            if (!isPrompterMode) return 0;
+
             const viewportHeight = prompterContainer.clientHeight;
             return Math.min(viewportHeight * 0.28, (lineData.height + 16) * 2);
         }
