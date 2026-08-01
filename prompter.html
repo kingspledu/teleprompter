@@ -653,7 +653,7 @@
 
         <div class="start-actions">
             <button class="start-btn practice-start-btn" onclick="startPrompter(false)">연습 시작</button>
-            <button class="start-btn" onclick="startPrompter(true)">프롬프터 시작 v1.49</button>
+            <button class="start-btn" onclick="startPrompter(true)">프롬프터 시작 v1.50</button>
         </div>
     </div>
 
@@ -811,7 +811,7 @@
             html = html.replace('let isVerticalFlipped = false;', `let isVerticalFlipped = ${isVerticalFlipped};`);
 
             const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-            const fileName = `${importedJsonBaseName}_prompter_v1.49.html`;
+            const fileName = `${importedJsonBaseName}_prompter_v1.50.html`;
             if (navigator.msSaveOrOpenBlob) {
                 navigator.msSaveOrOpenBlob(blob, fileName);
                 return;
@@ -1088,31 +1088,39 @@
                 const textNode = Array.from(textSpan.childNodes).find(node => node.nodeType === Node.TEXT_NODE);
                 if (!textNode || !textNode.textContent.trim()) return;
 
+                const previousInlineTransform = textSpan.style.transform;
+                textSpan.style.transform = 'none';
                 const range = document.createRange();
                 range.selectNodeContents(textNode);
+                const lineRect = line.getBoundingClientRect();
+                const measurementScale = line.offsetWidth
+                    ? Math.max(0.01, lineRect.width / line.offsetWidth)
+                    : 1;
                 const spanRect = textSpan.getBoundingClientRect();
                 const lineRects = Array.from(range.getClientRects()).filter(rect => rect.width > 1);
-                const totalWidth = lineRects.reduce((total, rect) => total + rect.width, 0) || 1;
+                const totalWidth = lineRects.reduce((total, rect) => total + (rect.width / measurementScale), 0) || 1;
                 let accumulatedWidth = 0;
 
                 lineRects.forEach(rect => {
                     const track = document.createElement('div');
                     const fill = document.createElement('div');
+                    const localWidth = rect.width / measurementScale;
                     const segmentStart = accumulatedWidth / totalWidth;
-                    accumulatedWidth += rect.width;
+                    accumulatedWidth += localWidth;
                     const segmentEnd = accumulatedWidth / totalWidth;
 
                     track.className = 'line-progress-track';
-                    track.style.left = `${rect.left - spanRect.left}px`;
-                    track.style.top = `${rect.bottom - spanRect.top + 4}px`;
+                    track.style.left = `${(rect.left - spanRect.left) / measurementScale}px`;
+                    track.style.top = `${(rect.bottom - spanRect.top) / measurementScale + 4}px`;
                     track.style.bottom = 'auto';
-                    track.style.width = `${rect.width}px`;
+                    track.style.width = `${localWidth}px`;
                     fill.className = 'line-progress-fill';
                     fill.dataset.segmentStart = segmentStart;
                     fill.dataset.segmentEnd = segmentEnd;
                     track.appendChild(fill);
                     textSpan.appendChild(track);
                 });
+                textSpan.style.transform = previousInlineTransform;
             });
         }
 
