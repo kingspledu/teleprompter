@@ -623,7 +623,7 @@
 
         <div class="start-actions">
             <button class="start-btn practice-start-btn" onclick="startPrompter(false)">연습 시작</button>
-            <button class="start-btn" onclick="startPrompter(true)">프롬프터 시작 v1.43</button>
+            <button class="start-btn" onclick="startPrompter(true)">프롬프터 시작 v1.45</button>
         </div>
     </div>
 
@@ -781,7 +781,7 @@
             html = html.replace('let isVerticalFlipped = false;', `let isVerticalFlipped = ${isVerticalFlipped};`);
 
             const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-            const fileName = `${importedJsonBaseName}_prompter_v1.43.html`;
+            const fileName = `${importedJsonBaseName}_prompter_v1.45.html`;
             if (navigator.msSaveOrOpenBlob) {
                 navigator.msSaveOrOpenBlob(blob, fileName);
                 return;
@@ -954,25 +954,37 @@
 
         function calculatePacingWeight(line) {
             const trimmedLine = line.trim();
-            if (!trimmedLine) return 0.8;
+            if (!trimmedLine) return 0.25;
 
-            const tokens = trimmedLine.match(/[A-Za-z]+(?:['’-][A-Za-z]+)*|[0-9]+|[가-힣]+/g) || [];
-            const speakingWeight = tokens.reduce((total, token) => {
-                if (/^[A-Za-z]/.test(token)) {
-                    return total + Math.max(1, token.replace(/[^A-Za-z]/g, '').length / 6);
-                }
-                if (/^[가-힣]/.test(token)) {
-                    return total + Math.max(1, token.length / 3);
-                }
-                return total + 1;
+            const koreanCharacters = (trimmedLine.match(/[가-힣]/g) || []).length;
+            const englishWords = trimmedLine.match(/[A-Za-z]+(?:['’-][A-Za-z]+)*/g) || [];
+            const numberGroups = trimmedLine.match(/[0-9]+(?:[.,][0-9]+)*/g) || [];
+            const otherReadableCharacters = (trimmedLine
+                .replace(/[가-힣A-Za-z0-9\s.,;:!?'’"“”()\[\]{}\-]/g, '')
+                .match(/\S/g) || []).length;
+
+            const englishWeight = englishWords.reduce((total, word) => {
+                return total + 0.55 + (word.length * 0.08);
             }, 0);
+            const numberWeight = numberGroups.reduce((total, number) => {
+                return total + 0.5 + (number.replace(/\D/g, '').length * 0.12);
+            }, 0);
+            const speakingWeight = (koreanCharacters * 0.34)
+                + englishWeight
+                + numberWeight
+                + (otherReadableCharacters * 0.28);
 
-            const commaPauses = (trimmedLine.match(/[,;]/g) || []).length * 0.4;
-            const sentencePauses = (trimmedLine.match(/[.!?]/g) || []).length * 0.9;
-            const phrasePauses = (trimmedLine.match(/[:—-]/g) || []).length * 0.3;
-            const minimumLineTime = 0.75;
+            const commaPauses = (trimmedLine.match(/[,;]/g) || []).length * 0.22;
+            const phrasePauses = (trimmedLine.match(/[:()\[\]]/g) || []).length * 0.12;
+            const sentencePauses = (trimmedLine.match(/[.!?]/g) || []).length * 0.42;
+            const longSentenceBoost = 1 + Math.min(0.38, Math.max(0, speakingWeight - 5) * 0.025);
 
-            return Math.max(1, speakingWeight) + commaPauses + sentencePauses + phrasePauses + minimumLineTime;
+            return Math.max(0.45,
+                (speakingWeight * longSentenceBoost)
+                + commaPauses
+                + phrasePauses
+                + sentencePauses
+            );
         }
         function startPrompter(usePrompterMirror) {
             if (typeof usePrompterMirror === 'boolean') {
@@ -1023,6 +1035,7 @@
 
             // 초기화 후 카운트다운 시작
             setTimeout(() => {
+                rebuildLineProgressTracks();
                 linesData.forEach(data => {
                     const el = document.getElementById(`line-${data.index}`);
                     data.offsetTop = el.offsetTop;
@@ -1034,6 +1047,54 @@
             }, 300);
         }
 
+
+        function rebuildLineProgressTracks() {
+            document.querySelectorAll('.text-line').forEach(line => {
+                const textSpan = line.querySelector('.text-span');
+                if (!textSpan) return;
+
+                textSpan.querySelectorAll('.line-progress-track').forEach(track => track.remove());
+                const textNode = Array.from(textSpan.childNodes).find(node => node.nodeType === Node.TEXT_NODE);
+                if (!textNode || !textNode.textContent.trim()) return;
+
+                const range = document.createRange();
+                range.selectNodeContents(textNode);
+                const spanRect = textSpan.getBoundingClientRect();
+                const lineRects = Array.from(range.getClientRects()).filter(rect => rect.width > 1);
+                const totalWidth = lineRects.reduce((total, rect) => total + rect.width, 0) || 1;
+                let accumulatedWidth = 0;
+
+                lineRects.forEach(rect => {
+                    const track = document.createElement('span');
+                    const fill = document.createElement('span');
+                    const segmentStart = accumulatedWidth / totalWidth;
+                    accumulatedWidth += rect.width;
+                    const segmentEnd = accumulatedWidth / totalWidth;
+
+                    track.className = 'line-progress-track';
+                    track.style.left = `${rect.left - spanRect.left}px`;
+                    track.style.top = `${rect.bottom - spanRect.top + 4}px`;
+                    track.style.bottom = 'auto';
+                    track.style.width = `${rect.width}px`;
+                    fill.className = 'line-progress-fill';
+                    fill.dataset.segmentStart = segmentStart;
+                    fill.dataset.segmentEnd = segmentEnd;
+                    track.appendChild(fill);
+                    textSpan.appendChild(track);
+                });
+            });
+        }
+
+        function updateLineProgress(lineIndex, progress) {
+            document.querySelectorAll(`#line-${lineIndex} .line-progress-fill`).forEach(fill => {
+                const segmentStart = parseFloat(fill.dataset.segmentStart || 0);
+                const segmentEnd = parseFloat(fill.dataset.segmentEnd || 1);
+                const segmentProgress = Math.max(0, Math.min(1,
+                    (progress - segmentStart) / Math.max(0.0001, segmentEnd - segmentStart)
+                ));
+                fill.style.transform = `scaleX(${1 - segmentProgress})`;
+            });
+        }
         function resetPrompterState() {
             prompterContainer.scrollTop = 0;
             progressBar.style.width = '100%';
@@ -1100,11 +1161,7 @@
                 }
 
                 // 3. 밑줄 진행바 실시간 축소 (1 -> 0)
-                const activeFill = document.getElementById(`line-fill-${currentLineIndex}`);
-                if (activeFill) {
-                    const remainingRatio = Math.max(0, 1 - lineProgress);
-                    activeFill.style.transform = `scaleX(${remainingRatio})`;
-                }
+                updateLineProgress(currentLineIndex, lineProgress);
 
                 // 4. 스크롤 위치 계산 (현재 줄을 화면 정중앙 50vh에 위치)
                 const currentLineData = linesData[currentLineIndex];
@@ -1205,6 +1262,7 @@
 
         function refreshLayout() {
             if (!prompterContainer.classList.contains('active')) return;
+            rebuildLineProgressTracks();
             linesData.forEach(data => {
                 const element = document.getElementById(`line-${data.index}`);
                 if (element) {
