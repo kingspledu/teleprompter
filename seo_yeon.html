@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html lang="ko"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>iPrompter</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;900&display=swap');
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            min-height: 100%;
+            background-color: #000000;
+            color: #ffffff;
+            overflow: hidden; /* 전체 페이지 스크롤 방지 */
+        }
+
+        #setup-container {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex;
+            flex-direction: column;
+            padding: 2rem 1.5rem;
+            padding-top: calc(2rem + env(safe-area-inset-top));
+            padding-bottom: calc(2rem + env(safe-area-inset-bottom));
+            background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%);
+            z-index: 100;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        #setup-container.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(-20px);
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-align: center;
+            background: linear-gradient(90deg, #fff, #aaa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        textarea {
+            flex: 1;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 1.5rem;
+            color: #fff;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            resize: none;
+            margin-bottom: 1rem;
+            outline: none;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
+        }
+
+        textarea:focus {
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        .script-import {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 0.65rem;
+        }
+
+        .json-import-btn,
+        .html-download-btn {
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            padding: 0.6rem 0.9rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .json-import-btn:active,
+        .html-download-btn:active {
+            background: rgba(255, 255, 255, 0.22);
+        }
+
+        .html-download-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .time-settings {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1.2rem;
+            border-radius: 16px;
+        }
+
+        .time-inputs {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .time-input-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .time-input-group input {
+            width: 60px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 1.2rem;
+            text-align: center;
+            padding: 0.5rem;
+            border-radius: 8px;
+            outline: none;
+        }
+
+        .preset-buttons {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .preset-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #ccc;
+            padding: 0.6rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .preset-btn:active {
+            background: rgba(255, 255, 255, 0.3);
+            color: #fff;
+        }
+
+        .start-btn {
+            background: #ffffff;
+            color: #000000;
+            border: none;
+            padding: 1.2rem;
+            border-radius: 16px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+            transition: transform 0.1s;
+        }
+
+        .start-actions {
+            display: flex;
+            gap: 0.75rem;
+            width: 100%;
+        }
+
+        .start-actions .start-btn {
+            flex: 1;
+        }
+
+        .practice-start-btn {
+            background: rgba(255, 255, 255, 0.14);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.28);
+            box-shadow: none;
+        }
+        .start-btn:active {
+            transform: scale(0.98);
+        }
+
+        #prompter-container {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #000000;
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+            overflow-y: auto; /* 수동 스크롤 허용 */
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            scroll-behavior: auto; /* 부드러운 스크롤 충돌 방지를 위해 auto 유지 */
+        }
+
+        #prompter-container.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* 위아래 그라데이션 마스크 (자연스럽게 사라지는 효과) */
+        #prompter-container::before,
+        #prompter-container::after {
+            content: '';
+            position: fixed;
+            left: 0; right: 0;
+            height: 25vh;
+            z-index: 10;
+            pointer-events: none;
+        }
+        #prompter-container::before {
+            top: 0;
+            background: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%);
+        }
+        #prompter-container::after {
+            bottom: 0;
+            background: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%);
+        }
+
+        #text-display {
+            padding: 50vh 2rem; /* 시작과 끝을 화면 중앙에 맞추기 위한 여백 */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .text-line {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.15); /* 기본: 어둡고 흐림 */
+            filter: blur(4px);
+            transform: scale(0.85);
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            padding: 1.5rem 0;
+            text-align: center;
+            line-height: 1.4;
+            word-break: keep-all;
+            cursor: pointer;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        /* 현재 줄의 위, 아래 줄 (밝은 회색) */
+        .text-line.adjacent {
+            color: rgba(255, 255, 255, 0.6);
+            filter: blur(1px);
+            transform: scale(0.95);
+        }
+
+        /* 현재 읽는 줄 (흰색, 커짐, 글로우) */
+        .text-line.active {
+            color: rgba(255, 255, 255, 1);
+            filter: blur(0px);
+            transform: scale(1.1);
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+        }
+
+        .text-span {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .line-progress-track {
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 2px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            overflow: hidden;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .text-line.active .line-progress-track {
+            opacity: 1; 
+        }
+
+        .line-progress-fill {
+            display: block;
+            width: 100%;
+            height: 100%;
+            background: #ffffff;
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+            transform-origin: right;
+            will-change: transform;
+        }
+
+        #edge-glow {
+            position: fixed;
+            top: 10%;
+            bottom: 10%;
+            width: 16vw;
+            max-width: 150px;
+            min-width: 54px;
+            z-index: 12;
+            opacity: 0;
+            pointer-events: none;
+            -webkit-filter: blur(10px);
+            filter: blur(10px);
+            transition: opacity 0.35s ease;
+        }
+
+        #prompter-container.active #edge-glow { opacity: 0.42; }
+
+        #edge-glow.left {
+            left: -1vw;
+            right: auto;
+            background: radial-gradient(ellipse at left center, rgba(255, 239, 105, 0.9) 0%, rgba(255, 244, 170, 0.48) 38%, transparent 82%);
+        }
+
+        #edge-glow.right {
+            right: -1vw;
+            left: auto;
+            background: radial-gradient(ellipse at right center, rgba(255, 239, 105, 0.9) 0%, rgba(255, 244, 170, 0.48) 38%, transparent 82%);
+        }
+        #edge-glow.left { transform-origin: left center; }
+        #edge-glow.right { transform-origin: right center; }
+
+        #edge-glow.pulse {
+            animation: edgeCuePulse 0.9s ease-out;
+        }
+
+        @keyframes edgeCuePulse {
+            0% { opacity: 0.12; transform: scaleX(0.72); }
+            28% { opacity: 0.72; transform: scaleX(1.08); }
+            100% { opacity: 0.42; transform: scaleX(1); }
+        }
+        #fixed-timer {
+            position: fixed;
+            top: 50vh;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
+            font-size: 0.88rem; /* 2.2rem의 40% */
+            color: #aaaaaa;
+            font-variant-numeric: tabular-nums;
+            font-weight: 600;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 6px 14px;
+            border-radius: 16px;
+            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            pointer-events: none;
+        }
+
+        #countdown-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        #countdown-overlay.active {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        #countdown-number {
+            font-size: 10rem;
+            font-weight: 900;
+            color: white;
+            text-shadow: 0 0 40px rgba(255, 255, 255, 0.8);
+            opacity: 0;
+            transform: scale(0.5);
+        }
+
+        #countdown-number.animate {
+            animation: classicCountdown 1s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        
+        @keyframes classicCountdown {
+            0% { transform: scale(2); opacity: 0; }
+            20% { transform: scale(1); opacity: 1; }
+            80% { transform: scale(0.9); opacity: 1; }
+            100% { transform: scale(0.5); opacity: 0; }
+        }
+        body.prompter-mirror-mode #countdown-number {
+            transform: scale(0.5, -0.5);
+        }
+
+        body.prompter-mirror-mode #countdown-number.animate {
+            animation-name: classicCountdownMirrored;
+        }
+
+        @keyframes classicCountdownMirrored {
+            0% { transform: scale(2, -2); opacity: 0; }
+            20% { transform: scale(1, -1); opacity: 1; }
+            80% { transform: scale(0.9, -0.9); opacity: 1; }
+            100% { transform: scale(0.5, -0.5); opacity: 0; }
+        }
+
+        #controls-container {
+            position: fixed;
+            bottom: 20px;
+            bottom: env(safe-area-inset-bottom, 20px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(30, 30, 30, 0.8);
+            -webkit-backdrop-filter: blur(15px);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0.8rem 1.5rem;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            max-width: calc(100% - 16px);
+            overflow-x: auto;
+            z-index: 30;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: bottom 0.3s ease;
+        }
+
+        .control-btn {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: background 0.2s;
+            min-width: 44px;
+            min-height: 44px;
+            touch-action: manipulation;
+        }
+
+        .control-btn:hover, .control-btn:active {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        #play-pause-btn {
+            background: white;
+            color: black;
+            width: 48px;
+            height: 48px;
+        }
+
+        #play-pause-btn:hover, #play-pause-btn:active {
+            background: #e0e0e0;
+        }
+
+        .control-btn.compact-label {
+            border-radius: 10px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .control-btn.is-active {
+            background: #ffffff;
+            color: #000000;
+        }
+
+        #prompter-container.flip-horizontal .text-span { transform: scaleX(-1); }
+        #prompter-container.flip-vertical .text-span { transform: scaleY(-1); }
+        #prompter-container.flip-horizontal.flip-vertical .text-span { transform: scale(-1, -1); }
+        #prompter-container.flip-horizontal #fixed-timer { transform: translateX(-50%) scaleX(-1); }
+        #prompter-container.flip-vertical #fixed-timer { transform: translateX(-50%) scaleY(-1); }
+        #prompter-container.flip-horizontal.flip-vertical #fixed-timer { transform: translateX(-50%) scale(-1, -1); }
+        #progress-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            z-index: 40;
+        }
+
+        #progress-bar {
+            position: absolute;
+            right: 0;
+            height: 100%;
+            background: white;
+            width: 100%;
+            transition: width 0.1s linear;
+        }
+
+        body.prompter-mirror-mode #progress-container {
+            top: 0;
+            bottom: auto;
+            transform: scaleY(-1);
+            transform-origin: center;
+        }
+
+        body.prompter-mirror-mode #progress-bar {
+            right: auto;
+            left: 50%;
+            transform: translateX(-50%);
+            transform-origin: center;
+        }
+        @media (orientation: landscape) and (max-height: 600px) {
+            #setup-container {
+                display: flex;
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) minmax(220px, 32vw);
+                grid-template-rows: auto 1fr auto;
+                gap: 0.65rem 1rem;
+                padding: 0.65rem 0.85rem;
+                padding: max(0.65rem, env(safe-area-inset-top)) max(0.85rem, env(safe-area-inset-right)) max(0.65rem, env(safe-area-inset-bottom)) max(0.85rem, env(safe-area-inset-left));
+            }
+
+            #setup-container h1 {
+                display: none;
+            }
+
+            .script-import {
+                grid-column: 2;
+                grid-row: 1;
+                margin: 0;
+            }
+
+            .json-import-btn,
+        .html-download-btn {
+                width: 100%;
+                padding: 0.5rem;
+                font-size: 0.82rem;
+            }
+
+            #script-input {
+                grid-column: 1;
+                grid-row: 1 / 4;
+                min-height: 0;
+                margin: 0;
+                padding: 1rem;
+                border-radius: 12px;
+                font-size: 0.95rem;
+                line-height: 1.45;
+            }
+
+            .time-settings {
+                grid-column: 2;
+                grid-row: 2;
+                align-self: center;
+                gap: 0.65rem;
+                margin: 0;
+                padding: 0.75rem;
+                border-radius: 12px;
+            }
+
+            .time-inputs {
+                gap: 0.6rem;
+            }
+
+            .time-input-group {
+                gap: 0.25rem;
+            }
+
+            .time-input-group input {
+                width: 52px;
+                padding: 0.35rem;
+                font-size: 1rem;
+            }
+
+            .preset-buttons {
+                gap: 0.35rem;
+            }
+
+            .preset-btn {
+                padding: 0.4rem 0.65rem;
+                font-size: 0.72rem;
+            }
+
+            .start-actions {
+                grid-column: 2;
+                grid-row: 3;
+            }
+
+            .start-btn {
+                grid-column: 2;
+                grid-row: 3;
+                padding: 0.75rem;
+                border-radius: 12px;
+                font-size: 1rem;
+            }
+
+            #prompter-container::before,
+            #prompter-container::after {
+                height: 18vh;
+            }
+
+            #text-display {
+                padding: 50vh 1.25rem;
+                padding: 50vh max(1.25rem, env(safe-area-inset-right)) 50vh max(1.25rem, env(safe-area-inset-left));
+            }
+
+            .text-line {
+                max-width: 82vw;
+                max-width: min(82vw, 900px);
+                padding: 0.75rem 0;
+                font-size: 1.65rem;
+                font-size: clamp(1.3rem, 4.5vw, 2rem);
+                line-height: 1.25;
+            }
+
+            .text-line.active {
+                transform: scale(1.03);
+            }
+
+            #fixed-timer {
+                font-size: 0.75rem;
+                padding: 4px 10px;
+            }
+
+            #controls-container {
+                bottom: 8px;
+                bottom: max(8px, env(safe-area-inset-bottom));
+                gap: 0.55rem;
+                padding: 0.35rem 0.7rem;
+                border-radius: 24px;
+            }
+
+            .control-btn {
+                padding: 0.35rem;
+            }
+
+            #play-pause-btn {
+                width: 40px;
+                height: 40px;
+            }
+        }
+
+        @media (orientation: landscape) and (max-height: 450px) {
+            .script-import { display: none; }
+            .time-settings { padding: 0.5rem; }
+            .preset-buttons { display: none; }
+            #text-display { padding-top: 50vh; padding-bottom: 50vh; }
+            .text-line { font-size: 1.35rem; padding: 0.55rem 0; }
+            #controls-container { opacity: 0.82; }
+        }
+
+        @media (min-width: 768px) and (min-height: 601px) {
+            #setup-container { padding-left: 8vw; padding-right: 8vw; }
+            .text-line { max-width: 900px; font-size: 2.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <div id="setup-container">
+        <h1>iPrompter</h1>
+        <div class="script-import">
+            <button type="button" class="json-import-btn" onclick="jsonFileInput.click()">JSON 원고 불러오기</button>
+            <input type="file" id="json-file-input" accept=".json,application/json" hidden="">
+            <button type="button" class="html-download-btn" id="html-download-btn" onclick="downloadConfiguredHtml()">설정 HTML 다운로드</button>
+        </div>
+                <textarea id="script-input" placeholder="여기에 읽을 대본을 입력하세요...">Hello
+friends.
+My name
+is Seo-Yeon Park.
+I am
+in the third grade.
+Have you felt a spark
+in your heart?
+I felt that spark
+on a clear day.
+I saw the group IVE
+on TV.
+They sang their song
+"I AM".
+They looked so bright and bold
+on stage.
+At that moment,
+I wanted to be like them.
+That sight taught me
+three key truths.
+First,
+music and dance connect our hearts
+past words.
+Second,
+a fine stage takes hard work
+behind it.
+Third,
+warm songs give true courage
+to people.
+So, a clear dream
+grew in me.
+I want to be a singer
+who shares glad cheer and joy.
+Now,
+I take steps to reach this goal.
+I practice a bright smile
+daily.
+I do stretch and sports
+to build strength.
+And I study English hard
+to talk with fans out wide.
+Music has no walls
+or borders.
+It can join all lands.
+My song will tell you,
+"Believe in yourself."
+I want to be a bridge
+and share our art with the world.
+Thank you.</textarea>
+        
+        <div class="time-settings">
+            <div class="time-inputs">
+                <div class="time-input-group">
+                    <input type="number" id="minutes-input" min="0" max="60" value="1">
+                    <label>분</label>
+                </div>
+                <div class="time-input-group">
+                    <input type="number" id="seconds-input" min="0" max="59" value="45">
+                    <label>초</label>
+                </div>
+            </div>
+            <div class="preset-buttons">
+                <button class="preset-btn" onclick="setPreset(0, 35)">기본 (35초)</button>
+                <button class="preset-btn" onclick="setPreset(1, 45)">3,4학년 (1분 45초)</button>
+                <button class="preset-btn" onclick="setPreset(2, 45)">5,6학년 (2분 45초)</button>
+            </div>
+        </div>
+
+        <div class="start-actions">
+            <button class="start-btn practice-start-btn" onclick="startPrompter(false)">연습 시작</button>
+            <button class="start-btn" onclick="startPrompter(true)">프롬프터 시작 v1.60</button>
+        </div>
+    </div>
+
+    <div id="prompter-container">
+        <!-- 상단 고정 타이머 -->
+        <div id="edge-glow" class="left" aria-hidden="true"></div>
+        <div id="fixed-timer">00:00.00</div>
+        
+        <div id="text-display"></div>
+
+        <!-- 하단 컨트롤 패널 -->
+        <div id="controls-container">
+            <!-- 뒤로가기 버튼 -->
+            <button class="control-btn" onclick="exitPrompter()" title="종료">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path></svg>
+            </button>
+            
+            <!-- 재생/일시정지 버튼 -->
+            <button class="control-btn compact-label" onclick="changeTextSize(-1)" title="글자 작게" aria-label="글자 작게">A−</button>
+            <button class="control-btn compact-label" onclick="changeTextSize(1)" title="글자 크게" aria-label="글자 크게">A＋</button>
+            <button class="control-btn compact-label" id="flip-horizontal-btn" onclick="toggleHorizontalFlip()" title="좌우 반전" aria-label="좌우 반전" aria-pressed="false">좌우</button>
+            <button class="control-btn compact-label" id="flip-vertical-btn" onclick="toggleVerticalFlip()" title="상하 반전" aria-label="상하 반전" aria-pressed="false">상하</button>
+            <button class="control-btn" id="play-pause-btn" onclick="togglePlay()" title="재생/일시정지">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="black"><path d="M8 5v14l11-7z"></path></svg>
+            </button>
+            
+            <!-- 처음부터 다시 버튼 -->
+            <button class="control-btn" onclick="restart()" title="처음부터">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"></path></svg>
+            </button>
+
+            <!-- 전체화면 토글 버튼 -->
+            <button class="control-btn" onclick="toggleFullscreen()" title="전체화면">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"></path></svg>
+            </button>
+        </div>
+    </div>
+
+    <div id="countdown-overlay">
+        <div id="countdown-number">5</div>
+    </div>
+
+    <div id="progress-container">
+        <div id="progress-bar"></div>
+    </div>
+
+    <script>
+        let animationId;
+        let isPlaying = false;
+        let startTime = null;
+        let pausedTime = 0;
+        let linesData = [];
+        let isCountingDown = false;
+        let wakeLock = null;
+        let activeLineIndex = 0;
+        let lastGlowLineIndex = -1;
+        let textSizeLevel = 2;
+        let isHorizontalFlipped = false;
+        let isVerticalFlipped = false;
+        let isPrompterMode = false;
+        let importedJsonBaseName = 'iPrompter';
+
+        if (!Array.prototype.flatMap) {
+            Array.prototype.flatMap = function (callback, thisArg) {
+                return Array.prototype.concat.apply([], this.map(callback, thisArg));
+            };
+        }
+        if (window.File && !File.prototype.text) {
+            File.prototype.text = function () {
+                const file = this;
+                return new Promise(function (resolve, reject) {
+                    const reader = new FileReader();
+                    reader.onload = function () { resolve(reader.result); };
+                    reader.onerror = reject;
+                    reader.readAsText(file, 'UTF-8');
+                });
+            };
+        }
+
+        const scriptInput = document.getElementById('script-input');
+        const setupContainer = document.getElementById('setup-container');
+        const prompterContainer = document.getElementById('prompter-container');
+        const textDisplay = document.getElementById('text-display');
+        const playPauseBtn = document.getElementById('play-pause-btn');
+        const progressBar = document.getElementById('progress-bar');
+        const countdownOverlay = document.getElementById('countdown-overlay');
+        const countdownNumber = document.getElementById('countdown-number');
+        const fixedTimer = document.getElementById('fixed-timer');
+        const edgeGlow = document.getElementById('edge-glow');
+        const minutesInput = document.getElementById('minutes-input');
+        const secondsInput = document.getElementById('seconds-input');
+        const jsonFileInput = document.getElementById('json-file-input');
+        const htmlDownloadBtn = document.getElementById('html-download-btn');
+        const controlsContainer = document.getElementById('controls-container');
+        const flipHorizontalBtn = document.getElementById('flip-horizontal-btn');
+        const flipVerticalBtn = document.getElementById('flip-vertical-btn');
+        async function requestWakeLock() {
+            if (!('wakeLock' in navigator) || wakeLock) return;
+
+            try {
+                wakeLock = await navigator.wakeLock.request('screen');
+                wakeLock.addEventListener('release', () => {
+                    wakeLock = null;
+                });
+            } catch (error) {
+                console.log('Wake Lock request failed:', error);
+            }
+        }
+
+        async function releaseWakeLock() {
+            if (!wakeLock) return;
+
+            await wakeLock.release();
+            wakeLock = null;
+        }
+
+        // 샘플 텍스트
+        function findReadingScript(data) {
+            if (!data || typeof data !== 'object') return null;
+
+            for (const [key, value] of Object.entries(data)) {
+                const normalizedKey = key.replace(/[\s_*]/g, '');
+                if (normalizedKey.includes('영문끊어읽기원고')) return value;
+
+                const nestedResult = findReadingScript(value);
+                if (nestedResult) return nestedResult;
+            }
+
+            return null;
+        }
+
+
+
+        function getConfiguredHtmlFileName() {
+            const nameParts = importedJsonBaseName
+                .replace(/\.json$/i, '')
+                .split(/[_\s-]+/)
+                .map(part => part.trim())
+                .filter(Boolean)
+                .filter(part => !/^(speech|script|prompter|\d+)$/i.test(part));
+            const personName = nameParts.slice(0, 2)
+                .join('_')
+                .toLowerCase()
+                .replace(/[^a-z0-9가-힣_]+/g, '');
+            return `${personName || 'prompter'}.html`;
+        }
+        function downloadConfiguredHtml() {
+            const clone = document.documentElement.cloneNode(true);
+            const clonedSetup = clone.querySelector('#setup-container');
+            const clonedPrompter = clone.querySelector('#prompter-container');
+            const clonedTextDisplay = clone.querySelector('#text-display');
+            const clonedTextarea = clone.querySelector('#script-input');
+            const clonedMinutes = clone.querySelector('#minutes-input');
+            const clonedSeconds = clone.querySelector('#seconds-input');
+            const clonedDownloadButton = clone.querySelector('#html-download-btn');
+
+            clonedSetup.classList.remove('hidden');
+            clonedPrompter.classList.remove('active', 'flip-horizontal', 'flip-vertical');
+            clonedTextDisplay.innerHTML = '';
+            clonedTextarea.textContent = scriptInput.value;
+            clonedMinutes.setAttribute('value', minutesInput.value || '0');
+            clonedSeconds.setAttribute('value', secondsInput.value || '0');
+            clonedDownloadButton.removeAttribute('disabled');
+
+            let html = '<!DOCTYPE html>\n' + clone.outerHTML;
+            const embeddedScript = `scriptInput.value = ${JSON.stringify(scriptInput.value)};`;
+            html = html.replace(/scriptInput\.value\s*=\s*(?:`[\s\S]*?`|"(?:\\.|[^"\\])*");/, embeddedScript);
+            html = html.replace(/let textSizeLevel = -?\d+;/, `let textSizeLevel = ${textSizeLevel};`);
+            html = html.replace('let isHorizontalFlipped = false;', `let isHorizontalFlipped = ${isHorizontalFlipped};`);
+            html = html.replace('let isVerticalFlipped = false;', `let isVerticalFlipped = ${isVerticalFlipped};`);
+
+            const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+            const fileName = getConfiguredHtmlFileName();
+            if (navigator.msSaveOrOpenBlob) {
+                navigator.msSaveOrOpenBlob(blob, fileName);
+                return;
+            }
+
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+        jsonFileInput.addEventListener('change', async event => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            try {
+                const rawJson = await file.text();
+                const normalizedJson = rawJson
+                    .replace(/^\uFEFF/, '')
+                    .trim()
+                    .replace(/^```(?:json)?\s*/i, '')
+                    .replace(/\s*```(?:\s*\[cite:\s*[^\]]+\])?\s*$/i, '');
+                const data = JSON.parse(normalizedJson);
+                const readingScript = findReadingScript(data);
+                if (!readingScript) {
+                    throw new Error('"영문_끊어읽기_원고" 항목을 찾을 수 없습니다.');
+                }
+
+                const sourceLines = Array.isArray(readingScript) ? readingScript : [readingScript];
+                scriptInput.value = sourceLines
+                    .flatMap(line => String(line).split(/\s*\/\s*/))
+                    .map(line => line.trim())
+                    .filter(Boolean)
+                    .join('\n');
+                importedJsonBaseName = file.name.replace(/\.json$/i, '') || 'iPrompter';
+                htmlDownloadBtn.disabled = false;
+            } catch (error) {
+                alert(`JSON 파일을 읽을 수 없습니다.\n${error.message}`);
+            } finally {
+                event.target.value = '';
+            }
+        });
+        scriptInput.value = "Hello\nfriends.\nMy name\nis Seo-Yeon Park.\nI am\nin the third grade.\nHave you felt a spark\nin your heart?\nI felt that spark\non a clear day.\nI saw the group IVE\non TV.\nThey sang their song\n\"I AM\".\nThey looked so bright and bold\non stage.\nAt that moment,\nI wanted to be like them.\nThat sight taught me\nthree key truths.\nFirst,\nmusic and dance connect our hearts\npast words.\nSecond,\na fine stage takes hard work\nbehind it.\nThird,\nwarm songs give true courage\nto people.\nSo, a clear dream\ngrew in me.\nI want to be a singer\nwho shares glad cheer and joy.\nNow,\nI take steps to reach this goal.\nI practice a bright smile\ndaily.\nI do stretch and sports\nto build strength.\nAnd I study English hard\nto talk with fans out wide.\nMusic has no walls\nor borders.\nIt can join all lands.\nMy song will tell you,\n\"Believe in yourself.\"\nI want to be a bridge\nand share our art with the world.\nThank you.";
+
+        // 프리셋 설정 함수
+        function setPreset(min, sec) {
+            minutesInput.value = min;
+            secondsInput.value = sec;
+        }
+
+        // 시간 포맷 포맷팅 함수 (MM:SS)
+        function formatTime(ms) {
+            const centiseconds = Math.floor(ms / 10) % 100;
+            const totalSeconds = Math.floor(ms / 1000);
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(centiseconds).padStart(2, '0')}`;
+        }
+
+        // 고정 타이머 텍스트 업데이트
+        function updateTimerDisplay(elapsedMs) {
+            fixedTimer.textContent = formatTime(elapsedMs);
+        }
+
+        function updateTimerPosition(currentIndex) {
+            const activeLine = document.getElementById(`line-${currentIndex}`);
+            if (!activeLine) return;
+
+            activeLineIndex = currentIndex;
+            if (isPrompterMode) {
+                fixedTimer.style.top = `${Math.max(16, window.innerHeight * 0.08)}px`;
+                return;
+            }
+
+            const lineRect = activeLine.getBoundingClientRect();
+            const timerHeight = fixedTimer.offsetHeight || 30;
+            const controlsTop = controlsContainer ? controlsContainer.getBoundingClientRect().top : window.innerHeight;
+            const top = Math.min(lineRect.bottom + 10, controlsTop - timerHeight - 8);
+            fixedTimer.style.top = `${Math.max(8, top)}px`;
+        }
+        function applyPrompterView() {
+            const sizeMultiplier = Math.pow(1.15, textSizeLevel);
+            document.querySelectorAll('.text-line').forEach(line => {
+                if (!line.dataset.baseFontSize) {
+                    line.dataset.baseFontSize = parseFloat(window.getComputedStyle(line).fontSize);
+                }
+                line.style.fontSize = `${line.dataset.baseFontSize * sizeMultiplier}px`;
+            });
+
+            prompterContainer.classList.toggle('flip-horizontal', isHorizontalFlipped);
+            prompterContainer.classList.toggle('flip-vertical', isVerticalFlipped);
+            flipHorizontalBtn.classList.toggle('is-active', isHorizontalFlipped);
+            flipVerticalBtn.classList.toggle('is-active', isVerticalFlipped);
+            flipHorizontalBtn.setAttribute('aria-pressed', String(isHorizontalFlipped));
+            flipVerticalBtn.setAttribute('aria-pressed', String(isVerticalFlipped));
+            setTimeout(refreshLayout, 0);
+        }
+
+        function changeTextSize(direction) {
+            textSizeLevel = Math.max(-4, Math.min(5, textSizeLevel + direction));
+            applyPrompterView();
+        }
+
+        function toggleHorizontalFlip() {
+            isHorizontalFlipped = !isHorizontalFlipped;
+            applyPrompterView();
+        }
+
+        function toggleVerticalFlip() {
+            isVerticalFlipped = !isVerticalFlipped;
+            applyPrompterView();
+        }
+        function enterFullscreen() {
+            const elem = document.documentElement;
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen().catch(err => console.log(err));
+            } else if (elem.webkitRequestFullscreen) { /* Safari */
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) { /* IE11 */
+                elem.msRequestFullscreen();
+            }
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                enterFullscreen();
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                }
+            }
+        }
+
+        function startCountdown(seconds, callback) {
+            if (isCountingDown) return;
+            isCountingDown = true;
+            countdownOverlay.classList.add('active');
+            
+            let count = seconds;
+            
+            function tick() {
+                if (count > 0) {
+                    countdownNumber.textContent = count;
+                    countdownNumber.classList.remove('animate');
+                    void countdownNumber.offsetWidth; // DOM Reflow 트리거 (애니메이션 재시작)
+                    countdownNumber.classList.add('animate');
+                    count--;
+                    setTimeout(tick, 1000);
+                } else {
+                    countdownOverlay.classList.remove('active');
+                    isCountingDown = false;
+                    if(callback) callback();
+                }
+            }
+            tick();
+        }
+
+        function updateActiveLine(currentIndex) {
+            if (currentIndex !== lastGlowLineIndex) {
+                lastGlowLineIndex = currentIndex;
+                edgeGlow.className = currentIndex % 2 === 0 ? 'left' : 'right';
+                void edgeGlow.offsetWidth;
+                edgeGlow.classList.add('pulse');
+            }
+            document.querySelectorAll('.text-line').forEach((el, index) => {
+                // 클래스 초기화
+                el.className = 'text-line'; 
+                
+                if (index === currentIndex) {
+                    el.classList.add('active'); // 현재 줄 (흰색, 중앙)
+                } else if (index === currentIndex - 1 || index === currentIndex + 1) {
+                    el.classList.add('adjacent'); // 위아래 줄 (밝은 회색)
+                }
+                // 나머지는 기본 클래스(.text-line)만 유지되어 어둡고 블러처리 됨
+            });
+        }
+
+        function calculatePacingWeight(line) {
+            const trimmedLine = line.trim();
+            if (!trimmedLine) return 0.25;
+
+            const koreanCharacters = (trimmedLine.match(/[가-힣]/g) || []).length;
+            const englishWords = trimmedLine.match(/[A-Za-z]+(?:['’-][A-Za-z]+)*/g) || [];
+            const numberGroups = trimmedLine.match(/[0-9]+(?:[.,][0-9]+)*/g) || [];
+            const otherReadableCharacters = (trimmedLine
+                .replace(/[가-힣A-Za-z0-9\s.,;:!?'’"“”()\[\]{}\-]/g, '')
+                .match(/\S/g) || []).length;
+
+            const englishWeight = englishWords.reduce((total, word) => {
+                return total + 0.55 + (word.length * 0.08);
+            }, 0);
+            const numberWeight = numberGroups.reduce((total, number) => {
+                return total + 0.5 + (number.replace(/\D/g, '').length * 0.12);
+            }, 0);
+            const speakingWeight = (koreanCharacters * 0.34)
+                + englishWeight
+                + numberWeight
+                + (otherReadableCharacters * 0.28);
+
+            const commaPauses = (trimmedLine.match(/[,;]/g) || []).length * 0.22;
+            const phrasePauses = (trimmedLine.match(/[:()\[\]]/g) || []).length * 0.12;
+            const sentencePauses = (trimmedLine.match(/[.!?]/g) || []).length * 0.42;
+            const longSentenceBoost = 1 + Math.min(0.38, Math.max(0, speakingWeight - 5) * 0.025);
+
+            return Math.max(0.45,
+                (speakingWeight * longSentenceBoost)
+                + commaPauses
+                + phrasePauses
+                + sentencePauses
+            );
+        }
+
+        function formatPrompterLine(text) {
+            if (!text || !text.trim()) return '&nbsp;';
+
+            const trimmedText = text.trim();
+            const endsSentence = /[.!?。？！…]["'’”)}\]]*$/.test(trimmedText);
+            return endsSentence ? text : `${text} →`;
+        }
+        function startPrompter(usePrompterMirror) {
+            if (typeof usePrompterMirror === 'boolean') {
+                isPrompterMode = usePrompterMirror;
+                isVerticalFlipped = usePrompterMirror;
+            }
+            textSizeLevel = 2;
+            document.body.classList.toggle('prompter-mirror-mode', isPrompterMode);
+            const text = scriptInput.value.trim();
+            if (!text) return;
+
+            // 화면 전환
+            setupContainer.classList.add('hidden');
+            prompterContainer.classList.add('active');
+            enterFullscreen();
+
+            const rawLines = text.split('\n');
+            
+            // 글자수에 따른 동적 시간 분배 (긴 줄은 길게, 짧은 줄은 짧게)
+            let totalPacingWeight = 0;
+            linesData = rawLines.map((line, index) => {
+                const pacingWeight = calculatePacingWeight(line);
+                totalPacingWeight += pacingWeight;
+                return { index, text: line, pacingWeight };
+            });
+
+            const minutes = parseInt(minutesInput.value || 0);
+            const seconds = parseInt(secondsInput.value || 0);
+            const totalDurationMs = (minutes * 60 + seconds) * 1000;
+            let currentTimeMs = 0;
+
+            // DOM 렌더링
+            textDisplay.innerHTML = linesData.map((data, index) => {
+                data.duration = (data.pacingWeight / totalPacingWeight) * totalDurationMs;
+                data.startTime = currentTimeMs;
+                currentTimeMs += data.duration;
+
+                return `<div class="text-line" id="line-${index}" onclick="jumpToLine(${index})">
+                    <span class="text-span">
+                        ${formatPrompterLine(data.text)}
+                        <div class="line-progress-track">
+                            <div class="line-progress-fill" id="line-fill-${index}"></div>
+                        </div>
+                    </span>
+                </div>`;
+            }).join('');
+
+            applyPrompterView();
+
+            // 초기화 후 카운트다운 시작
+            setTimeout(() => {
+                rebuildLineProgressTracks();
+                linesData.forEach(data => {
+                    const el = document.getElementById(`line-${data.index}`);
+                    data.offsetTop = el.offsetTop;
+                    data.height = el.offsetHeight;
+                });
+                
+                resetPrompterState();
+                startCountdown(5, () => { play(); });
+            }, 300);
+        }
+
+
+        function rebuildLineProgressTracks() {
+            document.querySelectorAll('.text-line').forEach(line => {
+                const textSpan = line.querySelector('.text-span');
+                if (!textSpan) return;
+
+                textSpan.querySelectorAll('.line-progress-track').forEach(track => track.remove());
+                const textNode = Array.from(textSpan.childNodes).find(node => node.nodeType === Node.TEXT_NODE);
+                if (!textNode || !textNode.textContent.trim()) return;
+
+                const previousInlineTransform = textSpan.style.transform;
+                textSpan.style.transform = 'none';
+                const range = document.createRange();
+                range.selectNodeContents(textNode);
+                const lineRect = line.getBoundingClientRect();
+                const measurementScale = line.offsetWidth
+                    ? Math.max(0.01, lineRect.width / line.offsetWidth)
+                    : 1;
+                const spanRect = textSpan.getBoundingClientRect();
+                const rawRects = Array.from(range.getClientRects()).filter(rect => rect.width > 1);
+                const mergeTolerance = Math.max(1, measurementScale * 2);
+                const lineRects = [];
+
+                rawRects.forEach(rect => {
+                    const previousRect = lineRects[lineRects.length - 1];
+                    if (previousRect && Math.abs(previousRect.top - rect.top) <= mergeTolerance) {
+                        previousRect.left = Math.min(previousRect.left, rect.left);
+                        previousRect.right = Math.max(previousRect.right, rect.right);
+                        previousRect.top = Math.min(previousRect.top, rect.top);
+                        previousRect.bottom = Math.max(previousRect.bottom, rect.bottom);
+                        previousRect.width = previousRect.right - previousRect.left;
+                    } else {
+                        lineRects.push({
+                            left: rect.left,
+                            right: rect.right,
+                            top: rect.top,
+                            bottom: rect.bottom,
+                            width: rect.width
+                        });
+                    }
+                });
+
+                const totalWidth = lineRects.reduce((total, rect) => total + (rect.width / measurementScale), 0) || 1;
+                const fixedVisualGap = 6;
+                const fixedVisualHeight = 4;
+                const localGap = fixedVisualGap / measurementScale;
+                const localHeight = fixedVisualHeight / measurementScale;
+                let accumulatedWidth = 0;
+
+                lineRects.forEach(rect => {
+                    const track = document.createElement('div');
+                    const fill = document.createElement('div');
+                    const localWidth = rect.width / measurementScale;
+                    const segmentStart = accumulatedWidth / totalWidth;
+                    accumulatedWidth += localWidth;
+                    const segmentEnd = accumulatedWidth / totalWidth;
+
+                    track.className = 'line-progress-track';
+                    track.style.left = `${(rect.left - spanRect.left) / measurementScale}px`;
+                    track.style.top = `${(rect.bottom - spanRect.top) / measurementScale + localGap}px`;
+                    track.style.bottom = 'auto';
+                    track.style.width = `${localWidth}px`;
+                    track.style.height = `${localHeight}px`;
+                    fill.className = 'line-progress-fill';
+                    fill.dataset.segmentStart = segmentStart;
+                    fill.dataset.segmentEnd = segmentEnd;
+                    track.appendChild(fill);
+                    textSpan.appendChild(track);
+                });
+                textSpan.style.transform = previousInlineTransform;
+            });
+        }
+
+        function updateLineProgress(lineIndex, progress) {
+            document.querySelectorAll(`#line-${lineIndex} .line-progress-fill`).forEach(fill => {
+                const segmentStart = parseFloat(fill.dataset.segmentStart || 0);
+                const segmentEnd = parseFloat(fill.dataset.segmentEnd || 1);
+                const segmentProgress = Math.max(0, Math.min(1,
+                    (progress - segmentStart) / Math.max(0.0001, segmentEnd - segmentStart)
+                ));
+                fill.style.transform = `scaleX(${1 - segmentProgress})`;
+            });
+        }
+        function resetPrompterState() {
+            lastGlowLineIndex = -1;
+            prompterContainer.scrollTop = 0;
+            progressBar.style.width = '100%';
+            updateActiveLine(0);
+            updateTimerDisplay(0);
+            updateTimerPosition(0);
+            
+            document.querySelectorAll('.line-progress-fill').forEach(fill => {
+                fill.style.transform = 'scaleX(1)';
+            });
+        }
+
+
+
+        function getHighlightLineOffset(lineData) {
+            if (!isPrompterMode) return 0;
+
+            const viewportHeight = prompterContainer.clientHeight;
+            return Math.min(viewportHeight * 0.28, (lineData.height + 16) * 2);
+        }
+        function keepActiveLineInSafeArea(targetScroll, lineData) {
+            const viewportHeight = prompterContainer.clientHeight;
+            const controlsRect = controlsContainer.getBoundingClientRect();
+            const safeTop = Math.max(16, viewportHeight * 0.22);
+            const safeBottom = Math.min(viewportHeight * 0.78, controlsRect.top - 48);
+            const visualMargin = Math.max(8, lineData.height * 0.06);
+            const minimumScroll = lineData.offsetTop + lineData.height + visualMargin - safeBottom;
+            const maximumScroll = lineData.offsetTop - visualMargin - safeTop;
+
+            if (minimumScroll <= maximumScroll) {
+                return Math.max(0, Math.min(maximumScroll, Math.max(minimumScroll, targetScroll)));
+            }
+
+            const safeCenter = (safeTop + safeBottom) / 2;
+            return Math.max(0, lineData.offsetTop + (lineData.height / 2) - safeCenter);
+        }
+        function step(timestamp) {
+            if (!startTime) startTime = timestamp;
+            
+            if (isPlaying) {
+                const elapsed = timestamp - startTime + pausedTime;
+                const totalDurationMs = (parseInt(minutesInput.value || 0) * 60 + parseInt(secondsInput.value || 0)) * 1000;
+                
+                // 1. 전체 진행률 및 타이머
+                const globalProgress = Math.min(elapsed / totalDurationMs, 1);
+                progressBar.style.width = `${(1 - globalProgress) * 100}%`;
+                updateTimerDisplay(elapsed);
+
+                // 2. 현재 활성화된 줄 찾기
+                let currentLineIndex = 0;
+                let lineProgress = 0;
+
+                for (let i = 0; i < linesData.length; i++) {
+                    const line = linesData[i];
+                    if (elapsed >= line.startTime && elapsed < line.startTime + line.duration) {
+                        currentLineIndex = i;
+                        lineProgress = (elapsed - line.startTime) / line.duration;
+                        break;
+                    }
+                    if (i === linesData.length - 1 && elapsed >= line.startTime) {
+                        currentLineIndex = i;
+                        lineProgress = 1;
+                    }
+                }
+
+                // 3. 밑줄 진행바 실시간 축소 (1 -> 0)
+                updateLineProgress(currentLineIndex, lineProgress);
+
+                // 4. 스크롤 위치 계산 (현재 줄을 화면 정중앙 50vh에 위치)
+                const currentLineData = linesData[currentLineIndex];
+                const currentLineElement = document.getElementById(`line-${currentLineIndex}`);
+                const containerRect = prompterContainer.getBoundingClientRect();
+                const currentRect = currentLineElement.getBoundingClientRect();
+                const currentCenter = currentRect.top + (currentRect.height / 2);
+                const viewportCenter = containerRect.top + (containerRect.height / 2);
+                const targetScroll = prompterContainer.scrollTop + currentCenter - viewportCenter;
+
+                prompterContainer.scrollTop = Math.max(0, targetScroll);
+                updateActiveLine(currentLineIndex);
+                updateTimerPosition(currentLineIndex);
+
+                if (elapsed < totalDurationMs) {
+                    animationId = requestAnimationFrame(step);
+                } else {
+                    isPlaying = false;
+                    releaseWakeLock();
+                    centerActiveLine(currentLineIndex);
+                    playPauseBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="black"><path d="M8 5v14l11-7z"/></svg>';
+                }
+            }
+        }
+
+        function play() {
+            if (!isPlaying) {
+                isPlaying = true;
+                requestWakeLock();
+                startTime = null; // step에서 재할당
+                animationId = requestAnimationFrame(step);
+                playPauseBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="black"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+            }
+        }
+
+
+        function centerActiveLine(lineIndex = activeLineIndex) {
+            const lineData = linesData[lineIndex];
+            const lineElement = document.getElementById(`line-${lineIndex}`);
+            if (!lineData || !lineElement || !prompterContainer.classList.contains('active')) return;
+
+            const containerRect = prompterContainer.getBoundingClientRect();
+            const lineRect = lineElement.getBoundingClientRect();
+            const lineCenter = lineRect.top + (lineRect.height / 2);
+            const viewportCenter = containerRect.top + (containerRect.height / 2);
+            prompterContainer.scrollTop = Math.max(0,
+                prompterContainer.scrollTop + lineCenter - viewportCenter
+            );
+            updateActiveLine(lineIndex);
+            updateTimerPosition(lineIndex);
+        }
+        function pause() {
+            if (isPlaying) {
+                isPlaying = false;
+                releaseWakeLock();
+                cancelAnimationFrame(animationId);
+                if (startTime) {
+                    pausedTime += performance.now() - startTime;
+                }
+                centerActiveLine();
+                playPauseBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="black"><path d="M8 5v14l11-7z"/></svg>';
+            }
+        }
+
+        function togglePlay() {
+            if (isPlaying) {
+                pause();
+            } else {
+                startCountdown(3, () => { play(); }); // 일시정지 후 재생시는 3초 카운트
+            }
+        }
+
+        function restart() {
+            pause();
+            pausedTime = 0;
+            resetPrompterState();
+            startCountdown(5, () => { play(); });
+        }
+
+        function exitPrompter() {
+            pause();
+            pausedTime = 0;
+            prompterContainer.classList.remove('active');
+            setupContainer.classList.remove('hidden');
+            document.body.classList.remove('prompter-mirror-mode');
+            
+            if (document.exitFullscreen && document.fullscreenElement) {
+                document.exitFullscreen().catch(()=>{});
+            }
+        }
+
+        // 터치로 특정 줄 점프
+        function jumpToLine(index) {
+            pause();
+            const targetLine = linesData[index];
+            pausedTime = targetLine.startTime;
+            
+            // 시각적 업데이트 강제 실행
+            centerActiveLine(index);
+            updateActiveLine(index);
+            const totalMs = (parseInt(minutesInput.value || 0) * 60 + parseInt(secondsInput.value || 0)) * 1000;
+            updateTimerDisplay(pausedTime);
+            updateTimerPosition(index);
+            progressBar.style.width = `${(1 - pausedTime / totalMs) * 100}%`;
+        }
+
+        // 사용자가 수동으로 스크롤하면 자동 스크롤 일시 정지
+        prompterContainer.addEventListener('touchstart', () => {
+            if (isPlaying) pause();
+        }, { passive: true });
+        prompterContainer.addEventListener('touchend', () => {
+            if (!isPlaying) setTimeout(() => centerActiveLine(), 80);
+        }, { passive: true });
+
+        function refreshLayout() {
+            if (!prompterContainer.classList.contains('active')) return;
+            rebuildLineProgressTracks();
+            linesData.forEach(data => {
+                const element = document.getElementById(`line-${data.index}`);
+                if (element) {
+                    data.offsetTop = element.offsetTop;
+                    data.height = element.offsetHeight;
+                }
+            });
+            updateTimerPosition(activeLineIndex);
+        }
+
+        function refreshResponsiveTextSize() {
+            document.querySelectorAll('.text-line').forEach(line => {
+                line.style.fontSize = '';
+                delete line.dataset.baseFontSize;
+            });
+            applyPrompterView();
+        }
+
+        window.addEventListener('resize', refreshResponsiveTextSize);
+        window.addEventListener('orientationchange', () => setTimeout(refreshResponsiveTextSize, 250));
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', refreshResponsiveTextSize);
+        }
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible' && isPlaying) {
+                requestWakeLock();
+            }
+        });
+    </script>
+
+</body></html>
