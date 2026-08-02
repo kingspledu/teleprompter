@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="ko" style="--script-font-size: 12.5px; --script-line-height: 1.4; --script-paragraph-gap: 0px; --script-cell-padding-y: 5px; --script-letter-spacing: -0.1px;"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speech Contest</title>
+    <!-- Tailwind CSS -->
+    
+    <!-- Google Fonts: Inter and a handwriting style for the title -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Permanent+Marker&amp;display=swap" rel="stylesheet">
+    <!-- html2canvas and jsPDF for PDF generation -->
+    
+    
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* gray-100 */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 1rem;
+            min-height: 100vh;
+            padding-bottom: var(--last-page-review-space, 12rem);
+        }
+
+        /* A4 Paper Styling */
+        .a4-page {
+            width: 210mm;
+            height: 297mm;
+            background-color: white;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden; /* Hide anything outside the paper bounds */
+            margin-bottom: 2rem;
+            flex-shrink: 0;
+        }
+
+        .header-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 70px;
+            background-color: #d1d5db; /* gray-300 */
+            z-index: 1;
+        }
+
+        .content-container {
+            position: relative;
+            z-index: 2; /* Above background shapes */
+            padding: 0 40px 40px 40px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .top-info {
+            display: flex;
+            justify-content: flex-start;
+            gap: 40px;
+            height: 70px;
+            align-items: center;
+            color: #4b5563; /* gray-600 */
+            font-size: 1.1rem;
+            padding-left: 20px;
+        }
+
+        .info-field {
+            display: flex;
+            align-items: flex-end;
+        }
+        
+        .info-field span {
+            margin-right: 10px;
+        }
+
+        .info-line {
+            border-bottom: 1px dashed #6b7280;
+            width: 200px;
+            display: inline-block;
+        }
+        
+        .info-line.short {
+            width: 300px;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            height: 160px;
+            margin-top: 10px;
+        }
+
+        .title-shape {
+            position: absolute;
+            top: 15px;
+            left: -40px;
+            width: 380px;
+            height: 130px;
+            background-color: #e5e7eb; /* gray-200 */
+            border-radius: 0 100px 100px 0; /* Rounded right side */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding-left: 20px;
+        }
+
+        .title-text {
+            font-family: 'Permanent Marker', cursive;
+            font-size: 2.3rem;
+            line-height: 1.2;
+            text-align: center;
+            color: #000;
+        }
+
+        .main-heading {
+            width: 100%;
+            text-align: right;
+            font-size: 1.875rem; /* 1.25rem의 150% 크기인 1.875rem으로 변경 */
+            font-weight: 400;
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+
+        .main-heading-title,
+        .worksheet-number {
+            display: block;
+            font: inherit;
+        }
+
+        .main-heading-title {
+            font-weight: 700;
+        }
+
+        .worksheet-number {
+            color: #6b7280;
+            font-weight: 400;
+            margin-top: -0.2em;
+        }
+
+        .page-image {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background: #fff;
+            cursor: crosshair;
+            touch-action: none;
+        }
+
+        .page-image img {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            height: 100%;
+            width: auto;
+            max-width: none;
+            object-fit: contain;
+            user-select: none;
+            pointer-events: none;
+        }
+
+        .cropped-page-canvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .page-image.crop-ready img {
+            visibility: hidden;
+        }
+
+        .no-image-message {
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+            color: #6b7280;
+            font-size: 1.5rem;
+            font-weight: 500;
+        }
+
+        .crop-selection {
+            position: absolute;
+            z-index: 9000;
+            border: 3px solid #dc2626;
+            background: rgba(220, 38, 38, 0.2);
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.28);
+            pointer-events: none;
+        }
+
+        .crop-exclusion-mask {
+            position: absolute;
+            z-index: 8000;
+            background: #fff;
+            pointer-events: none;
+        }
+
+        .page-number {
+            position: absolute;
+            left: 50%;
+            bottom: 7mm;
+            transform: translateX(-50%);
+            z-index: 9999;
+            font-size: 14px;
+            line-height: 1;
+            font-weight: 600;
+            color: #111;
+            text-shadow: 0 0 3px #fff, 0 0 3px #fff;
+            pointer-events: none;
+        }
+
+        .columns-wrapper {
+            display: flex;
+            gap: 0;
+            margin-top: 1.5rem;
+            flex-grow: 1;
+            min-height: 0;
+        }
+
+        /* Text Block (Page 1 Left) */
+        .text-column {
+            flex: var(--text-column-ratio, 66.667) 1 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 0;
+        }
+        
+        .text-paragraph {
+            font-size: var(--text-font-size, 15.2px);
+            line-height: var(--text-line-height, 1.6);
+            letter-spacing: var(--text-letter-spacing, 0px);
+            color: #1f2937;
+            margin-bottom: 0;
+            text-align: justify;
+        }
+
+        /* Vocabulary List (Page 1 Right) */
+        .vocab-column {
+            flex: var(--vocab-column-ratio, 33.333) 1 0;
+            font-size: var(--vocab-font-size, 13.6px);
+            line-height: var(--vocab-line-height, 1.4);
+            letter-spacing: var(--vocab-letter-spacing, 0px);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 0;
+        }
+        
+        .vocab-group {
+            margin-bottom: 0;
+        }
+        
+        .vocab-letter {
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+        
+        .vocab-item span.en {
+            font-weight: 700;
+        }
+
+        .vocab-meaning {
+            color: #374151;
+        }
+        .column-resizer {
+            flex: 0 0 2.5rem;
+            position: relative;
+            cursor: col-resize;
+            touch-action: none;
+        }
+
+        .column-resizer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 3px;
+            transform: translateX(-50%);
+            border-radius: 999px;
+            background: rgba(107, 114, 128, 0.35);
+        }
+
+        .column-resizer:hover::before,
+        .column-resizer.dragging::before {
+            width: 5px;
+            background: #2563eb;
+        }
+
+        .settings-panel {
+            position: fixed;
+            right: 2rem;
+            bottom: 9rem;
+            z-index: 60;
+            width: min(360px, calc(100vw - 2rem));
+            padding: 1.25rem;
+            border-radius: 1rem;
+            background: #fff;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+            display: block;
+        }
+
+        .settings-panel.pdf-hide {
+            display: block;
+        }
+
+        .settings-panel.pdf-hide.hidden {
+            display: none;
+        }
+
+        .settings-panel.hidden {
+            display: none;
+        }
+
+        .settings-panel h2 {
+            font-size: 1rem;
+            font-weight: 700;
+            margin: 0 0 0.75rem;
+        }
+
+        .setting-row {
+            display: grid;
+            grid-template-columns: 8rem 1fr 3.5rem;
+            gap: 0.5rem;
+            align-items: center;
+            margin-top: 0.65rem;
+            font-size: 0.82rem;
+        }
+
+        .setting-row input[type="range"] {
+            width: 100%;
+        }
+
+        .setting-row output {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .batch-settings-status {
+            margin: 0.65rem 0 0.8rem;
+            padding: 0.65rem 0.75rem;
+            border-radius: 0.65rem;
+            background: #eff6ff;
+            border: 1px solid #93c5fd;
+            color: #1d4ed8;
+            font-weight: 700;
+            font-size: 0.9rem;
+            line-height: 1.35;
+        }
+        .settings-section-title {
+            margin-top: 1rem;
+            padding-top: 0.8rem;
+            border-top: 1px solid #e5e7eb;
+            font-weight: 700;
+            font-size: 0.88rem;
+        }
+
+        .pdf-page-options {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+
+        .pdf-page-options label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.35rem;
+            padding: 0.5rem 0.25rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            font-size: 0.82rem;
+            cursor: pointer;
+        }
+
+        .paragraph-letter {
+            font-weight: 700;
+        }
+
+        .vocab-item {
+            display: grid;
+            grid-template-columns: max-content minmax(0, 1fr);
+            column-gap: 3px;
+            align-items: baseline;
+            min-height: calc(var(--vocab-font-size, 13.6px) * var(--vocab-line-height, 1.4));
+        }
+
+        .vocab-item-number {
+            align-self: baseline;
+            padding: 0;
+            line-height: 1;
+            vertical-align: baseline;
+        }
+
+        .vocab-item-content {
+            min-width: 0;
+
+        }
+
+        .word-entry {
+            display: grid;
+            grid-template-columns: max-content minmax(0, 1fr);
+            column-gap: 8px;
+            align-items: start;
+            min-height: 1.5em;
+        }
+
+        .word-entry .check-square {
+            margin-top: 0.25em;
+            margin-right: 0;
+        }
+
+        .word-text {
+            min-width: 0;
+
+        }
+
+        .vocab-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            table-layout: fixed;
+        }
+
+        .vocab-table th, .vocab-table td {
+            border: 1px solid #d1d5db; /* gray-300 */
+            padding: 10px 15px;
+            text-align: left;
+        }
+
+        .vocab-table th {
+            background-color: #f3f4f6; /* gray-100 */
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .vocab-table td.word-col {
+            width: 25%;
+            font-size: 0.95rem;
+        }
+
+        .vocab-table td.meaning-col {
+            width: 25%;
+        }
+
+        .meaning-line {
+            border-bottom: 1px solid #9ca3af; /* gray-400 */
+            width: 100%;
+            display: inline-block;
+            height: 1.2rem;
+        }
+
+        .check-square {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border: 1px solid #6b7280;
+            margin-right: 8px;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 1rem 2rem;
+            border-radius: 9999px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: calc(100vw - 2rem);
+            gap: 1rem;
+            z-index: 50;
+        }
+
+        .pdf-hide {
+            display: flex;
+        }
+
+        #loadingOverlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        #loadingOverlay.active {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        @media (max-width: 220mm) {
+            .a4-page {
+                transform: scale(calc(100vw / 230mm));
+                transform-origin: top center;
+                margin-bottom: calc(-297mm * (1 - (100vw / 230mm)) + 2rem);
+            }
+        }
+        .tts-clickable { cursor: pointer; border-radius: 2px; transition: background-color 0.15s, color 0.15s; }
+        .tts-clickable:hover { background: #fef3c7; color: #92400e; }
+        .vocab-clickable { cursor: pointer; border-radius: 3px; transition: background-color 0.15s, color 0.15s; }
+        .vocab-clickable:hover { background: #dbeafe; color: #1d4ed8; }
+        .vocab-sentence-popup { position: fixed; inset: 0; z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 1.25rem; background: rgba(15, 23, 42, 0.5); }
+        .vocab-sentence-popup.hidden { display: none; }
+        .vocab-popup-card { width: min(560px, 94vw); max-height: 82vh; overflow-y: auto; border-radius: 1rem; background: #fff; box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28); padding: 1.25rem 1.35rem 1.35rem; }
+        .vocab-popup-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 0.9rem; }
+        .vocab-popup-word { font-size: 1.25rem; font-weight: 800; color: #1e3a8a; }
+        .vocab-popup-close { width: 2rem; height: 2rem; border-radius: 999px; border: 1px solid #cbd5e1; background: #f8fafc; font-size: 1.25rem; line-height: 1; }
+        .vocab-popup-label { margin-top: 0.8rem; font-size: 0.78rem; font-weight: 800; color: #64748b; }
+        .vocab-popup-text { margin-top: 0.25rem; line-height: 1.65; color: #1f2937; }
+        .vocab-popup-expression { padding: 0.55rem 0.7rem; border-radius: 0.55rem; background: #f8fafc; border: 1px solid #e2e8f0; font-weight: 700; color: #334155; }
+        .vocab-popup-meaning { color: #374151; }
+            .speech-header-band { position:absolute; inset:0 0 auto; height:70px; background:#d1d5db; }
+        .speech-page-content { position:relative; z-index:2; height:100%; box-sizing:border-box; padding:0 36px 34px; display:flex; flex-direction:column; }
+        .speech-header { height:205px; flex:0 0 205px; display:flex; align-items:center; justify-content:space-between; gap:32px; }
+        .speech-contest-title { margin-left:-36px; width:340px; height:122px; border-radius:0 70px 70px 0; background:#e5e7eb; display:flex; align-items:center; justify-content:center; padding-left:18px; font-family:'Permanent Marker',cursive; font-size:2.15rem; line-height:1; text-align:center; color:#111; }
+        .participant-block { flex:1; text-align:right; padding-top:38px; }
+        .participant-block h1 { margin:0; font-size:2rem; line-height:1.15; font-weight:800; color:#111827; }
+        .participant-block p { margin:8px 0 0; font-size:1.08rem; line-height:1.4; color:#6b7280; }
+        .speech-script { flex:1; min-height:0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:repeat(var(--script-row-count, 12),minmax(0,1fr)); grid-auto-flow:column; column-gap:30px; row-gap:0; padding:4px 0 5px; }
+        .script-pair { min-height:0; padding:5px 0 4px; border-bottom:1px solid #e5e7eb; display:flex; flex-direction:column; justify-content:center; break-inside:avoid; }
+        .script-english { font-size:13.2px; line-height:1.28; font-weight:700; color:#1f2937; }
+        .script-korean { margin-top:2px; font-size:12.4px; line-height:1.28; color:#4b5563; word-break:keep-all; }
+        @media print { body { padding:0; background:#fff; } .a4-page { box-shadow:none; margin:0; } .pdf-hide { display:none!important; } }
+            /* Speech app v2 */
+        :root { --script-font-size:13px; --script-line-height:1.3; --script-paragraph-gap:5px; --script-letter-spacing:0px; --script-cell-padding-y:3px; }
+        .speech-pages { display:flex; flex-direction:column; align-items:center; width:100%; }
+        .speech-page { box-sizing:border-box; }
+        .speech-header-band { position:absolute; inset:0 0 auto; height:70px; background:#d1d5db; }
+        .speech-page-content { position:relative; z-index:2; height:100%; box-sizing:border-box; padding:0 36px 34px; display:flex; flex-direction:column; }
+        .speech-header { height:205px; flex:0 0 205px; display:flex; align-items:center; justify-content:space-between; gap:32px; }
+        .speech-contest-title { margin-left:-36px; width:340px; height:122px; border-radius:0 70px 70px 0; background:#e5e7eb; display:flex; align-items:center; justify-content:center; padding-left:18px; font-family:'Permanent Marker',cursive; font-size:2.15rem; line-height:1; text-align:center; color:#111; }
+        .participant-block { flex:1; text-align:right; padding-top:38px; }
+        .participant-block h1 { margin:0; font-size:2rem; line-height:1.15; font-weight:800; color:#111827; }
+        .participant-block p { margin:8px 0 0; font-size:1.08rem; line-height:1.4; color:#6b7280; }
+        .speech-script { flex:1; min-height:0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:repeat(var(--script-row-count, 12),minmax(0,1fr)); grid-auto-flow:column; column-gap:30px; row-gap:var(--script-paragraph-gap); padding:4px 0 5px; }
+        .script-entry { min-height:0; padding:3px 0; border-bottom:1px solid #e5e7eb; display:flex; flex-direction:column; justify-content:center; break-inside:avoid; font-size:var(--script-font-size); line-height:var(--script-line-height); letter-spacing:var(--script-letter-spacing); }
+        .script-english { font-weight:700; color:#1f2937; }
+        .script-korean { margin-top:2px; color:#4b5563; word-break:keep-all; }
+        .reading-page .script-entry { font-size:calc(var(--script-font-size) + 1px); font-weight:650; color:#1f2937; }
+        .speech-word { cursor:pointer; border-radius:3px; transition:background-color .15s,color .15s; }
+        .speech-word:hover, .speech-word:focus { color:#1d4ed8; background:#dbeafe; outline:none; }
+        .speech-toolbar { position:fixed; left:50%; bottom:1.25rem; transform:translateX(-50%); z-index:100; display:flex; align-items:center; gap:.65rem; flex-wrap:wrap; justify-content:center; width:min(960px,calc(100vw - 2rem)); padding:.75rem 1rem; border-radius:1rem; background:rgba(255,255,255,.97); box-shadow:0 10px 30px rgba(15,23,42,.22); }
+        .speech-toolbar button, .upload-label { border:0; border-radius:999px; padding:.7rem 1rem; color:#fff; font-weight:700; cursor:pointer; }
+        .pdf-button { background:#2563eb; } .html-button { background:#475569; } .upload-label { background:#7c3aed; }
+        .speech-settings { display:flex; gap:.65rem; flex-wrap:wrap; align-items:center; }
+        .speech-settings label { display:grid; grid-template-columns:auto 90px 42px; align-items:center; gap:.35rem; font-size:.78rem; color:#334155; }
+        .speech-settings output { text-align:right; font-variant-numeric:tabular-nums; }
+        .upload-status { flex-basis:100%; text-align:center; font-size:.78rem; color:#475569; }
+        .hidden-file { display:none; }
+        @media print { body { padding:0; background:#fff; } .a4-page { box-shadow:none; margin:0; } .pdf-hide { display:none!important; } }
+            /* Read-aloud page layout v3 */
+        .reading-page .speech-script {
+            display:flex;
+            flex-direction:column;
+            gap:var(--script-paragraph-gap);
+            padding:8px 12px 10px;
+            border:1px solid #d4d4d4;
+            border-radius:14px;
+            background:#f5f5f5;
+            overflow:hidden;
+        }
+        .reading-page .script-entry {
+            flex:1 1 0;
+            min-height:0;
+            padding:3px 12px;
+            border:0;
+            border-left:4px solid transparent;
+            border-radius:6px;
+            display:flex;
+            flex-direction:row;
+            align-items:center;
+            justify-content:flex-start;
+            font-size:calc(var(--script-font-size) + .5px);
+            line-height:var(--script-line-height);
+            font-weight:650;
+            letter-spacing:var(--script-letter-spacing);
+            color:#1f2937;
+        }
+        .reading-page .script-entry:nth-child(odd) { background:#fafafa; border-left-color:#a3a3a3; }
+        .reading-page .script-entry:nth-child(even) { background:#eeeeee; border-left-color:#737373; }
+        .reading-page .speech-word:hover, .reading-page .speech-word:focus { background:#d4d4d4; color:#171717; }
+        .breath-mark { display:inline-block; margin:0 .28em; color:#525252; font-size:1.12em; font-weight:900; }
+            /* Wrappable word spacing */
+        .word-space { display:inline-block; width:.3em; min-width:.3em; }
+        .script-english { max-width:100%; overflow-wrap:normal; word-break:normal; }
+        .bilingual-page .script-entry { min-width:0; overflow:hidden; }
+        .reading-page .script-entry { flex-wrap:wrap; align-content:center; }
+            /* Balanced bilingual columns */
+        .bilingual-page .speech-script {
+            display:grid;
+            grid-template-columns:repeat(2,minmax(0,1fr));
+            grid-template-rows:minmax(0,1fr);
+            grid-auto-flow:row;
+            column-gap:24px;
+            row-gap:0;
+        }
+        .bilingual-page .script-column {
+            min-width:0;
+            min-height:0;
+            display:grid;
+            grid-template-rows:repeat(var(--column-row-count, 1),minmax(0,1fr));
+            gap:var(--script-paragraph-gap);
+        }
+            /* Page 1 typography controls */
+        .bilingual-page .script-entry {
+            font-size:var(--script-font-size);
+            line-height:var(--script-line-height);
+            letter-spacing:var(--script-letter-spacing);
+        }
+        .bilingual-page .script-english,
+        .bilingual-page .script-korean {
+            font-size:inherit;
+            line-height:inherit;
+            letter-spacing:inherit;
+        }
+            /* Page 1 cell padding control */
+        .bilingual-page .script-entry { padding:var(--script-cell-padding-y) 0; }
+    </style>
+<style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.mt-4{margin-top:1rem}.text-lg{font-size:1.125rem;line-height:1.75rem}.font-semibold{font-weight:600}.text-gray-700{--tw-text-opacity:1;color:rgb(55 65 81 / var(--tw-text-opacity, 1))}</style></head>
+<body style="padding-bottom: 2rem; min-height: auto;">
+    <div id="speechPages" class="speech-pages"><main class="a4-page speech-page bilingual-page"><div class="speech-header-band"></div><div class="speech-page-content"><header class="speech-header"><div class="speech-contest-title">speech contest</div><div class="participant-block"><h1>Seo-Yeon Park</h1><p>Jae-Reung Elementary School · 초등학교 3학년</p></div></header><section class="speech-script" aria-label="한글병기 원고"><div class="script-column" style="--column-row-count:12"><div class="script-entry"><div class="script-english"><span class="speech-word" tabindex="0" data-word="Hello">Hello</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="friends">friends.</span></div><div class="script-korean">안녕하세요 여러분.</div></div><div class="script-entry"><div class="script-english"><span class="speech-word" tabindex="0" data-word="My">My</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="name">name</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="is">is</span><wbr><span class="word-space" aria-hidden="true"> </span>Seo-Yeon<wbr><span class="word-space" aria-hidden="true"> </span>Park.</div><div class="script-korean">제 이름은 박서연입니다.</div></div><div class="script-entry"><div class="script-english"><span class="speech-word" tabindex="0" data-word="I">I</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="am">am</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="in">in</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="the">the</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="third">third</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="grade">grade.</span></div><div class="script-korean">저는 초등학교 3학년입니다.</div></div><div class="script-entry"><div class="script-english"><span class="speech-word" tabindex="0" data-word="Have">Have</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="you">you</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="felt">felt</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="a">a</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="spark">spark</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="in">in</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="your">your</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="heart">heart?</span></div><div class="script-korean">여러분은 가슴에 불꽃이 튀는 것을 느껴본 적이 있나요?</div></div><div class="script-entry"><div class="script-english"><span class="speech-word" tabindex="0" data-word="I">I</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="felt">felt</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="that">that</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="spark">spark</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="on">on</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="a">a</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="clear">clear</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="day">day.</span></div><div class="script-korean">저는 맑은 날 그 불꽃을 느꼈습니다.</div></div><div class="script-entry"><div class="script-english"><span class="speech-word" tabindex="0" data-word="I">I</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="saw">saw</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="the">the</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="group">group</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="IVE">IVE</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="on">on</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="TV">TV.</span></div><div class="script-korean">저는 TV에서 아이브 그룹을 보았습니다.</div></div><div class="script-entry"><div class="script-english"><span class="speech-word" tabindex="0" data-word="They">They</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="sang">sang</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="their">their</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="song">song</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="I">"I</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="AM">AM".</span></div><div class="script-korean">그들은 'I AM'이라는 노래를 불렀습니다.</div></div><div class="script-entry"><div class="script-english"><span class="speech-word" tabindex="0" data-word="They">They</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="looked">looked</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="so">so</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="bright">bright</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="and">and</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="bold">bold</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="on">on</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="stage">stage.</span></div><div class="script-korean">그들은 무대에서 정말 밝고 당당해 보였습니다.</div></div><div class="script-entry"><div class="script-english"><span class="speech-word" tabindex="0" data-word="At">At</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="that">that</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="moment">moment,</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="I">I</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="wanted">wanted</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="to">to</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="be">be</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="like">like</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="them">them.</span></div><div class="script-korean">그 순간, 저는 그들처럼 되고 싶었습니다.</div></div><div class="script-entry"><div class="script-english"><span class="speech-word" tabindex="0" data-word="That">That</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="sight">sight</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="taught">taught</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="me">me</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="three">three</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="key">key</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="truths">truths.</span></div><div class="script-korean">그 모습은 저에게 세 가지 중요한 사실을 가르쳐 주었습니다.</div></div><div class="script-entry"><div class="script-english"><span class="speech-word" tabindex="0" data-word="First">First,</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="music">music</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="and">and</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="dance">dance</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="connect">connect</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="our">our</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="hearts">hearts</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="past">past</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="words">words.</span></div><div class="script-korean">첫째, 음악과 춤은 언어를 넘어 우리의 마음을 연결해 줍니다.</div></div><div class="script-entry"><div class="script-english"><span class="speech-word" tabindex="0" data-word="Second">Second,</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="a">a</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="fine">fine</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="stage">stage</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="takes">takes</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="hard">hard</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="work">work</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="behind">behind</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="it">it.</span></div><div class="script-korean">둘째, 멋진 무대 뒤에는 수많은 노력이 숨어 있습니다.</div></div></div><div class="script-column" style="--column-row-count:12"><div class="script-entry"><div class="script-english"><span class="speech-word" tabindex="0" data-word="Third">Third,</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="warm">warm</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="songs">songs</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="give">give</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="true">true</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="courage">courage</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="to">to</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="people">people.</span></div><div class="script-korean">셋째, 따뜻한 노래는 사람들에게 진정한 용기를 줍니다.</div></div><div class="script-entry"><div class="script-english"><span class="speech-word" tabindex="0" data-word="So">So,</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="a">a</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="clear">clear</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="dream">dream</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="grew">grew</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="in">in</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="me">me.</span></div><div class="script-korean">그래서 저에게도 뚜렷한 꿈이 생겼습니다.</div></div><div class="script-entry"><div class="script-english"><span class="speech-word" tabindex="0" data-word="I">I</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="want">want</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="to">to</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="be">be</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="a">a</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="singer">singer</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="who">who</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="shares">shares</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="glad">glad</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="cheer">cheer</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="and">and</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="joy">joy.</span></div><div class="script-korean">저는 기쁜 응원과 행복을 나누는 가수가 되고 싶습니다.</div></div><div class="script-entry"><div class="script-english"><span class="speech-word" tabindex="0" data-word="Now">Now,</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="I">I</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="take">take</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="steps">steps</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="to">to</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="reach">reach</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="this">this</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="goal">goal.</span></div><div class="script-korean">이제 저는 이 목표를 향해 발걸음을 내딛고 있습니다.</div></div><div class="script-entry"><div class="script-english"><span class="speech-word" tabindex="0" data-word="I">I</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="practice">practice</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="a">a</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="bright">bright</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="smile">smile</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="daily">daily.</span></div><div class="script-korean">매일 밝은 미소를 연습합니다.</div></div><div class="script-entry"><div class="script-english"><span class="speech-word" tabindex="0" data-word="I">I</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="do">do</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="stretch">stretch</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="and">and</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="sports">sports</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="to">to</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="build">build</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="strength">strength.</span></div><div class="script-korean">체력을 키우기 위해 스트레칭과 운동을 합니다.</div></div><div class="script-entry"><div class="script-english"><span class="speech-word" tabindex="0" data-word="And">And</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="I">I</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="study">study</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="English">English</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="hard">hard</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="to">to</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="talk">talk</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="with">with</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="fans">fans</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="out">out</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="wide">wide.</span></div><div class="script-korean">그리고 넓은 세상의 팬들과 소통하기 위해 영어를 열심히 공부합니다.</div></div><div class="script-entry"><div class="script-english"><span class="speech-word" tabindex="0" data-word="Music">Music</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="has">has</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="no">no</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="walls">walls</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="or">or</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="borders">borders.</span></div><div class="script-korean">음악에는 벽이나 국경이 없습니다.</div></div><div class="script-entry"><div class="script-english"><span class="speech-word" tabindex="0" data-word="It">It</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="can">can</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="join">join</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="all">all</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="lands">lands.</span></div><div class="script-korean">음악은 모든 나라를 하나로 연결할 수 있습니다.</div></div><div class="script-entry"><div class="script-english"><span class="speech-word" tabindex="0" data-word="My">My</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="song">song</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="will">will</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="tell">tell</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="you">you,</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="Believe">"Believe</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="in">in</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="yourself">yourself."</span></div><div class="script-korean">나의 노래는 여러분에게 "너 자신을 믿어봐"라고 말해 줄 것입니다.</div></div><div class="script-entry"><div class="script-english"><span class="speech-word" tabindex="0" data-word="I">I</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="want">want</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="to">to</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="be">be</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="a">a</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="bridge">bridge</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="and">and</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="share">share</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="our">our</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="art">art</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="with">with</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="the">the</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="world">world.</span></div><div class="script-korean">저는 다리가 되어 우리의 문화를 세계에 알리고 싶습니다.</div></div><div class="script-entry"><div class="script-english"><span class="speech-word" tabindex="0" data-word="Thank">Thank</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="you">you.</span></div><div class="script-korean">감사합니다.</div></div></div></section></div></main><main class="a4-page speech-page reading-page"><div class="speech-header-band"></div><div class="speech-page-content"><header class="speech-header"><div class="speech-contest-title">speech contest</div><div class="participant-block"><h1>Seo-Yeon Park</h1><p>Jae-Reung Elementary School · 초등학교 3학년</p></div></header><section class="speech-script" aria-label="영어 끊어읽기 원고"><div class="script-entry"><span class="speech-word" tabindex="0" data-word="Hello">Hello</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="breath-mark" aria-label="호흡">/</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="friends">friends.</span></div><div class="script-entry"><span class="speech-word" tabindex="0" data-word="My">My</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="name">name</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="breath-mark" aria-label="호흡">/</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="is">is</span><wbr><span class="word-space" aria-hidden="true"> </span>Seo-Yeon<wbr><span class="word-space" aria-hidden="true"> </span>Park.</div><div class="script-entry"><span class="speech-word" tabindex="0" data-word="I">I</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="am">am</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="breath-mark" aria-label="호흡">/</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="in">in</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="the">the</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="third">third</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="grade">grade.</span></div><div class="script-entry"><span class="speech-word" tabindex="0" data-word="Have">Have</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="you">you</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="felt">felt</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="a">a</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="spark">spark</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="breath-mark" aria-label="호흡">/</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="in">in</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="your">your</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="heart">heart?</span></div><div class="script-entry"><span class="speech-word" tabindex="0" data-word="I">I</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="felt">felt</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="that">that</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="spark">spark</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="breath-mark" aria-label="호흡">/</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="on">on</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="a">a</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="clear">clear</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="day">day.</span></div><div class="script-entry"><span class="speech-word" tabindex="0" data-word="I">I</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="saw">saw</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="the">the</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="group">group</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="IVE">IVE</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="breath-mark" aria-label="호흡">/</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="on">on</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="TV">TV.</span></div><div class="script-entry"><span class="speech-word" tabindex="0" data-word="They">They</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="sang">sang</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="their">their</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="song">song</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="breath-mark" aria-label="호흡">/</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="I">"I</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="AM">AM".</span></div><div class="script-entry"><span class="speech-word" tabindex="0" data-word="They">They</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="looked">looked</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="so">so</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="bright">bright</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="and">and</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="bold">bold</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="breath-mark" aria-label="호흡">/</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="on">on</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="stage">stage.</span></div><div class="script-entry"><span class="speech-word" tabindex="0" data-word="At">At</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="that">that</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="moment">moment,</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="breath-mark" aria-label="호흡">/</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="I">I</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="wanted">wanted</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="to">to</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="be">be</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="like">like</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="them">them.</span></div><div class="script-entry"><span class="speech-word" tabindex="0" data-word="That">That</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="sight">sight</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="taught">taught</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="me">me</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="breath-mark" aria-label="호흡">/</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="three">three</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="key">key</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="truths">truths.</span></div><div class="script-entry"><span class="speech-word" tabindex="0" data-word="First">First,</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="breath-mark" aria-label="호흡">/</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="music">music</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="and">and</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="dance">dance</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="connect">connect</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="our">our</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="hearts">hearts</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="breath-mark" aria-label="호흡">/</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="past">past</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="words">words.</span></div><div class="script-entry"><span class="speech-word" tabindex="0" data-word="Second">Second,</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="breath-mark" aria-label="호흡">/</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="a">a</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="fine">fine</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="stage">stage</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="takes">takes</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="hard">hard</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="work">work</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="breath-mark" aria-label="호흡">/</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="behind">behind</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="it">it.</span></div><div class="script-entry"><span class="speech-word" tabindex="0" data-word="Third">Third,</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="breath-mark" aria-label="호흡">/</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="warm">warm</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="songs">songs</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="give">give</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="true">true</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="courage">courage</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="breath-mark" aria-label="호흡">/</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="to">to</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="people">people.</span></div><div class="script-entry"><span class="speech-word" tabindex="0" data-word="So">So,</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="a">a</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="clear">clear</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="dream">dream</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="breath-mark" aria-label="호흡">/</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="grew">grew</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="in">in</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="me">me.</span></div><div class="script-entry"><span class="speech-word" tabindex="0" data-word="I">I</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="want">want</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="to">to</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="be">be</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="a">a</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="singer">singer</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="breath-mark" aria-label="호흡">/</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="who">who</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="shares">shares</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="glad">glad</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="cheer">cheer</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="and">and</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="joy">joy.</span></div><div class="script-entry"><span class="speech-word" tabindex="0" data-word="Now">Now,</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="breath-mark" aria-label="호흡">/</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="I">I</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="take">take</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="steps">steps</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="to">to</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="reach">reach</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="this">this</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="goal">goal.</span></div><div class="script-entry"><span class="speech-word" tabindex="0" data-word="I">I</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="practice">practice</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="a">a</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="bright">bright</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="smile">smile</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="breath-mark" aria-label="호흡">/</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="daily">daily.</span></div><div class="script-entry"><span class="speech-word" tabindex="0" data-word="I">I</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="do">do</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="stretch">stretch</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="and">and</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="sports">sports</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="breath-mark" aria-label="호흡">/</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="to">to</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="build">build</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="strength">strength.</span></div><div class="script-entry"><span class="speech-word" tabindex="0" data-word="And">And</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="I">I</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="study">study</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="English">English</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="hard">hard</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="breath-mark" aria-label="호흡">/</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="to">to</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="talk">talk</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="with">with</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="fans">fans</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="out">out</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="wide">wide.</span></div><div class="script-entry"><span class="speech-word" tabindex="0" data-word="Music">Music</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="has">has</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="no">no</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="walls">walls</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="breath-mark" aria-label="호흡">/</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="or">or</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="borders">borders.</span></div><div class="script-entry"><span class="speech-word" tabindex="0" data-word="It">It</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="can">can</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="join">join</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="all">all</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="lands">lands.</span></div><div class="script-entry"><span class="speech-word" tabindex="0" data-word="My">My</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="song">song</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="will">will</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="tell">tell</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="you">you,</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="breath-mark" aria-label="호흡">/</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="Believe">"Believe</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="in">in</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="yourself">yourself."</span></div><div class="script-entry"><span class="speech-word" tabindex="0" data-word="I">I</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="want">want</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="to">to</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="be">be</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="a">a</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="bridge">bridge</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="breath-mark" aria-label="호흡">/</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="and">and</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="share">share</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="our">our</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="art">art</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="with">with</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="the">the</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="world">world.</span></div><div class="script-entry"><span class="speech-word" tabindex="0" data-word="Thank">Thank</span><wbr><span class="word-space" aria-hidden="true"> </span><span class="speech-word" tabindex="0" data-word="you">you.</span></div></section></div></main></div>
+    
+    
+    
+
+<script>
+                function speakExportedWord(word) {
+                    if (!word || !('speechSynthesis' in window)) return;
+                    window.speechSynthesis.cancel();
+                    const utterance = new SpeechSynthesisUtterance(word);
+                    utterance.lang = 'en-US';
+                    utterance.rate = 0.82;
+                    window.speechSynthesis.speak(utterance);
+                }
+                document.addEventListener('click', event => {
+                    const word = event.target.closest('.speech-word');
+                    if (word) speakExportedWord(word.dataset.word);
+                });
+                document.addEventListener('keydown', event => {
+                    if ((event.key === 'Enter' || event.key === ' ') && event.target.matches('.speech-word')) {
+                        event.preventDefault();
+                        speakExportedWord(event.target.dataset.word);
+                    }
+                });</script></body></html>
