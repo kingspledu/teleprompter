@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko">
-<head>
+<html lang="ko"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>iPrompter</title>
@@ -111,6 +110,31 @@
             border-radius: 16px;
         }
 
+        .wpm-setting {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.55rem;
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .wpm-setting input {
+            width: 76px;
+            background: rgba(0, 0, 0, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.28);
+            color: #ffffff;
+            font-size: 1.1rem;
+            text-align: center;
+            padding: 0.48rem;
+            border-radius: 8px;
+            outline: none;
+        }
+
+        .time-input-group input[readonly] {
+            opacity: 0.78;
+            cursor: default;
+        }
         .time-inputs {
             display: flex;
             align-items: center;
@@ -136,6 +160,26 @@
             outline: none;
         }
 
+        .delay-setting {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.55rem;
+            color: #dddddd;
+            font-size: 0.92rem;
+        }
+
+        .delay-setting input {
+            width: 58px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            font-size: 1rem;
+            text-align: center;
+            padding: 0.42rem;
+            border-radius: 8px;
+            outline: none;
+        }
         .preset-buttons {
             display: flex;
             gap: 0.5rem;
@@ -362,6 +406,20 @@
             pointer-events: none;
         }
 
+        .text-line,
+        .text-line.adjacent,
+        .text-line.active {
+            color: #ffffff;
+            filter: none;
+            transform: none;
+            text-shadow: none;
+            opacity: 1;
+        }
+
+        .line-progress-track,
+        .delay-setting {
+            display: none !important;
+        }
         #countdown-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -517,6 +575,36 @@
             transform: translateX(-50%);
             transform-origin: center;
         }
+        html.low-performance .text-line,
+        html.low-performance .text-line.adjacent,
+        html.low-performance .text-line.active {
+            filter: none;
+            text-shadow: none;
+            transition: none;
+        }
+
+        html.low-performance #fixed-timer,
+        html.low-performance #controls-container {
+            -webkit-backdrop-filter: none;
+            backdrop-filter: none;
+            box-shadow: none;
+        }
+
+        html.low-performance #prompter-container::before,
+        html.low-performance #prompter-container::after { display: none; }
+
+        html.low-performance #edge-glow {
+            -webkit-filter: none;
+            filter: none;
+            animation: none;
+            transition: none;
+            opacity: 0.3;
+        }
+
+        html.low-performance .line-progress-fill {
+            box-shadow: none;
+            will-change: auto;
+        }
         @media (orientation: landscape) and (max-height: 600px) {
             #setup-container {
                 display: flex;
@@ -661,6 +749,10 @@
             #setup-container { padding-left: 8vw; padding-right: 8vw; }
             .text-line { max-width: 900px; font-size: 2.5rem; }
         }
+
+        .preset-buttons {
+            display: none !important;
+        }
     </style>
 </head>
 <body>
@@ -668,71 +760,138 @@
         <h1>iPrompter</h1>
         <div class="script-import">
             <button type="button" class="json-import-btn" onclick="jsonFileInput.click()">JSON 원고 불러오기</button>
-            <input type="file" id="json-file-input" accept=".json,application/json" hidden>
-            <button type="button" class="html-download-btn" id="html-download-btn" onclick="downloadConfiguredHtml()" disabled>설정 HTML 다운로드</button>
+            <input type="file" id="json-file-input" accept=".json,application/json" hidden="">
+            <button type="button" class="html-download-btn" id="html-download-btn" onclick="downloadConfiguredHtml()">설정 HTML 다운로드</button>
         </div>
-                <textarea id="script-input" placeholder="여기에 읽을 대본을 입력하세요...">Hello, everyone.
-My name is Sol,
-and I go to Jeo-Chung Elementary School.
-One day,
-while watching the news with my father,
-I saw a drone
-rescue a person
-who was lost deep in the mountains.
-I asked my dad
-how it could fly and save people.
-That was the moment
-I realized
-science can actually save lives,
-just like a superhero.
-My father explained
-science is everywhere
-to help us.
-Thanks to science,
-we have better medicine
-to cure sick people,
-airplanes can fly safely
-across the world,
-and even our car’s navigation system
-uses math and satellites
-to guide us
-on family trips.
-I thought
-that was amazing!
-Learning about all these useful inventions
-gave me a big dream:
-I want to become a scientist.
-To make my dream come true,
-I read science books,
-do simple experiments,
-and ask lots of questions.
-Of course,
-I also study English hard!
-With English,
-I can learn so much more
-about the world,
-and share my ideas
-with friends from other countries.
-I am small,
-but my dream is big.
-Someday,
-as a great scientist,
-I will invent things
-that make everyday life happier
-for everyone here.
-Thank you
-for listening to my story.</textarea>
+                <textarea id="script-input" placeholder="여기에 읽을 대본을 입력하세요...">어머님, 아버님 안녕하십니까.
+
+중학교 올라가서 아이가 성적표에 'A'를 딱 찍어오면 마음이 어떠십니까?
+"야~ 그래도 우리 애가 초등학교 때 시험 안 봐서 걱정했는데, 중학교 와서 A 받아오는 거 보니 공부 잘하고 있네! 고등학교 가서도 1등급 받겠어!"
+
+속으로 이렇게 안도하시고, 맛있는 거 사주시고 뿌듯해하셨죠?
+죄송하지만 오늘 첫마디부터 뼈 아주 세게 때리고 시작해보겠습니다.
+
+중학교 성적표에 찍혀있는 그 'A', 그거 고등학교 가서 1등급 받는다는 소리가 절대 아닙니다. 아니, 심하게 말하면 4등급, 5등급으로 떡락할 수도 있는 거품 성적입니다.
+
+도대체 중학교 성적표의 숨겨진 비극이 무엇인지, 그리고 우리 아이들이 왜 학원이나 학교에 가서 '공부'를 안 하고 '구경'만 하다 오는지, 오늘 아주 낱낱이 파헤쳐 드리겠습니다.
+
+중학교 성적표가 왜 가관인 줄 아십니까?
+중학교 성적은 상대평가가 아니라 '절대평가'입니다. 90점만 넘으면 너도나도 다 'A'를 줍니다.
+그러다 보니 한 학교에서, 한 반에서 A를 받는 아이들이 전체의 몇 퍼센트인 줄 아십니까?
+
+많게는 30%, 심한 과목이나 학교는 40% 이상이 A를 받습니다.
+
+자, 수학적으로 계산해 봅시다.
+전체의 30~40%가 A를 받는다는 건, 고등학교 상대평가 기준(1등급 4%, 2등급 11%, 3등급 23%)으로 치면 1등급부터 4등급까지가 전부 다 중학교에서는 똑같은 'A'라는 탈을 쓰고 있다는 뜻입니다.
+
+그런데 학부모님들은 "우리 애 A 받아왔으니까 상위권이네?" 하고 착각을 하십니다.
+현실은요? A 받은 아이들 중 상당수가 학습이 굉장히 대충 되어 있고, 개념의 깊이가 전혀 없습니다.
+
+물론 언제나 존재하는 진짜 최상위권 아이들도 있죠. 하지만 그 밑에서 "나도 A니까 쟤랑 비슷해"라고 생각하며 방심하고 있는 수많은 아이들... 고등학교 올라가서 진짜 상대평가 성적표(4등급, 5등급) 받는 순간 mental이 완전히 박살 납니다.
+
+중학교 A 등급이라는 달콤한 거짓말에 속아 아이 공부를 대충 방치하시면 절대 안 됩니다.
+
+학부모님들, 집에서 아이한테 뭐 좀 물어보거나 문제 풀게 할 때 아이들이 가장 많이 하는 말이 뭡니까?
+
+"아... 그거 아는 건데..."
+"아... 그거 아닌데... 아 맞다!"
+
+이 소리 진짜 자주 듣죠?
+그럼 부모님들은 "그래, 아는데 아쉽게 틀렸구나" 하고 넘어가십니다.
+근데 현장에서 가르치는 제가 단언컨대, 아이가 말하는 "아, 그거 아는 건데"의 진짜 뜻이 뭔지 아십니까?
+
+"나 그거 어디서 들어본 적은 있는데, 뭔지 정확히는 몰라." 입니다.
+
+이게 왜 이런 일이 벌어지는 줄 아십니까?
+아이들이 학교나 학원에 가서 '학습'을 한 게 아니라, 선생님이 수업하는 걸 '구경'하고 왔기 때문입니다.
+
+학원 강사가, 학교 선생님이 판서 멋지게 하고 칠판에 문제 쉽게 딱 풀어주니까, 앉아서 멍하니 보면서 "아~ 저렇게 푸는 거구나" 하고 고개 몇 번 끄덕입니다.
+그리고 집에 와서 자기가 공부를 아주 많이 한 줄 착각합니다.
+
+현실은 뭡니까? 공부와 학습은 선생님만 한 겁니다!
+선생님 실력만 나날이 좋아지고 있는 거예요! 웃프지 않습니까?
+매일 교재 연구하고 설명하는 선생님 실력만 일신우일신(日新又日新)하고, 정작 돈 내고 앉아있는 아이들은 인강이나 수업을 '영화 관람'하듯이 구경만 하다 집에 오는 겁니다.
+
+아이가 직접 펜을 들고, 자기 뇌를 쥐어짜내고, 자기 입으로 중얼거려보지 않은 지식은 절대 내 것이 되지 않습니다.
+
+저도 현장에서 아이들을 가르치는 사람 아닙니까?
+저는 수업 시간에 아이들 절대로 멍하니 구경하게 안 둡니다.
+주어진 태스크(Task)가 있으면, 저는 평소의 친근한 아저씨가 아니라 아주 무섭고 엄격한 선생님으로 변합니다.
+
+매일 단어 시험 보고, 개념 시험 봅니다.
+
+외우라고 강제로 시킵니다.
+
+손으로 쓰게 만들고, 소리 내서 읽게 하고, 자기 입으로 나한테 설명해보라고 시킵니다.
+
+아이가 직접 입을 열고, 손을 움직여서 머릿속에 있는 걸 밖으로 꺼내는 '출력(Output) 과정'이 없으면 그건 공부가 아닙니다.
+부모님들, 우리 어릴 때 어떻게 공부했습니까?
+손에 쥐나도록 써가면서 외우고, 백지에 써보고, 빽빽이 써가면서 억지로 머릿속에 쑤셔 넣었잖아요.
+
+시대가 변하고 디지털 시대가 됐어도, 인간의 뇌가 지식을 입력하고 저장하는 매커니즘은 옛날이나 지금이나 똑같습니다.
+암기 없는 이해는 모래 위에 쌓은 성입니다.
+초등 때부터 암기 시키셔야 합니다. 억지로라도 머리를 쓰게 강제하셔야 합니다.
+
+그럼 도대체 집에서 초등 학부모님들은 어떻게 해야 하냐?
+
+거창한 거 필요 없습니다.
+"전 과목을 집에서 공부시키십시오."
+
+어려운 사교육, 비싼 학원 안 보내셔도 됩니다. EBS 방송이든, 시중에서 제일 유명한 자습서나 문제집이든 상관없습니다.
+아이 학년에 맞는 전 과목 책을 딱 정하세요. 국어, 수학, 영어뿐만 아니라 사회, 과학까지 빠짐없이 챙기셔야 합니다.
+
+그리고 부모님이 집에서 딱 3가지만 해주십시오.
+
+밀리지 않고 매일 자기 분량을 공부하게 만드세요. (엉덩이 힘 키우기)
+
+핵심 개념과 어휘는 반드시 소리 내어 읽고 '암기'하게 만드세요.
+
+그리고 부모님이 반드시 '평가(테스트)'를 해주십시오.
+
+아이가 책을 읽었다고 하면, "다 읽었어?" 하고 끝내지 마시고 책을 덮게 하세요.
+"오늘 배운 사회 개념 중에 '지형'이 무슨 뜻인지 엄마한테 말해봐."
+"오늘 과학에서 배운 실험 결과가 왜 그렇게 나왔는지 설명해봐."
+
+아이가 입을 떼지 못한다? 그럼 공부 안 한 겁니다. 구경만 하고 온 겁니다.
+다시 읽고 외워오라고 단호하게 보내셔야 합니다.
+이게 바로 아이를 망치는 잔소리가 아니라, 아이를 진짜 실력자로 만드는 부모의 관심이자 교육입니다.
+
+어머님, 아버님.
+
+중학교 성적표의 A 등급이라는 착시 현상, 그리고 "학원 잘 다녀왔으니 공부했겠지"라는 안일한 믿음에서 이제 그만 깨어나셔야 합니다.
+
+우리 아이가 수업 시간에 선생님을 구경하는 '관객'이 되게 두지 마십시오.
+자신이 직접 무대 위로 올라와서 땀 흘리고, 암기하고, 문제를 풀어내는 '선수'가 되게 만드셔야 합니다.
+
+그러려면 집에서 부모가 단호해져야 합니다.
+조금 귀찮으시더라도 전 과목 교재 챙겨주시고, 하루 30분이라도 외웠는지 직접 확인하시고 평가해 주십시오.
+
+그 억겁 같은 암기의 시간과 단호한 평가의 과정만이, 고등학교라는 진짜 전쟁터에 나갔을 때 우리 아이를 무너지지 않게 지켜주는 단단한 뿌리가 될 것입니다.
+
+오늘 영상도 뼈가 좀 많이 아프셨을 겁니다. 하지만 이게 현실입니다.
+영상이 도움 되셨다면 구독과 좋아요 눌러주시고, 다음 영상에서 더 단호한 팩트로 찾아뵙겠습니다.
+감사합니다.</textarea>
         
         <div class="time-settings">
+            <div class="wpm-setting">
+                <label for="wpm-input">읽기 속도</label>
+                <input type="number" id="wpm-input" min="30" max="300" step="1" value="135">
+                <span>WPM</span>
+            </div>
             <div class="time-inputs">
                 <div class="time-input-group">
-                    <input type="number" id="minutes-input" min="0" max="60" value="1">
+                    <input type="number" id="minutes-input" min="0" max="60" value="6" readonly="">
                     <label>분</label>
                 </div>
                 <div class="time-input-group">
-                    <input type="number" id="seconds-input" min="0" max="59" value="45">
+                    <input type="number" id="seconds-input" min="0" max="59" value="3" readonly="">
                     <label>초</label>
                 </div>
+            </div>
+            <div class="delay-setting">
+                <label for="line-delay-input">문장 뒤 멈춤</label>
+                <input type="number" id="line-delay-input" min="0" max="10" step="0.1" value="1">
+                <span>초</span>
             </div>
             <div class="preset-buttons">
                 <button class="preset-btn" onclick="setPreset(0, 35)">기본 (35초)</button>
@@ -743,7 +902,7 @@ for listening to my story.</textarea>
 
         <div class="start-actions">
             <button class="start-btn practice-start-btn" onclick="startPrompter(false)">연습 시작</button>
-            <button class="start-btn" onclick="startPrompter(true)">프롬프터 시작 v1.58</button>
+            <button class="start-btn" onclick="startPrompter(true)">프롬프터 시작 v1.68</button>
         </div>
     </div>
 
@@ -752,15 +911,13 @@ for listening to my story.</textarea>
         <div id="edge-glow" class="left" aria-hidden="true"></div>
         <div id="fixed-timer">00:00.00</div>
         
-        <div id="text-display">
-            <!-- 텍스트 렌더링 영역 -->
-        </div>
+        <div id="text-display"></div>
 
         <!-- 하단 컨트롤 패널 -->
         <div id="controls-container">
             <!-- 뒤로가기 버튼 -->
             <button class="control-btn" onclick="exitPrompter()" title="종료">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path></svg>
             </button>
             
             <!-- 재생/일시정지 버튼 -->
@@ -769,17 +926,17 @@ for listening to my story.</textarea>
             <button class="control-btn compact-label" id="flip-horizontal-btn" onclick="toggleHorizontalFlip()" title="좌우 반전" aria-label="좌우 반전">좌우</button>
             <button class="control-btn compact-label" id="flip-vertical-btn" onclick="toggleVerticalFlip()" title="상하 반전" aria-label="상하 반전">상하</button>
             <button class="control-btn" id="play-pause-btn" onclick="togglePlay()" title="재생/일시정지">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="black"><path d="M8 5v14l11-7z"/></svg>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="black"><path d="M8 5v14l11-7z"></path></svg>
             </button>
             
             <!-- 처음부터 다시 버튼 -->
             <button class="control-btn" onclick="restart()" title="처음부터">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"></path></svg>
             </button>
 
             <!-- 전체화면 토글 버튼 -->
             <button class="control-btn" onclick="toggleFullscreen()" title="전체화면">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"></path></svg>
             </button>
         </div>
     </div>
@@ -798,15 +955,21 @@ for listening to my story.</textarea>
         let startTime = null;
         let pausedTime = 0;
         let linesData = [];
+        let scrollLinesData = [];
         let isCountingDown = false;
         let wakeLock = null;
         let activeLineIndex = 0;
         let lastGlowLineIndex = -1;
+        let renderedActiveLineIndex = -1;
+        let lastRenderTimestamp = 0;
+        const isLowPerformanceDevice = /Silk|Kindle|KF[A-Z]{2,}/i.test(navigator.userAgent)
+            || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
+        if (isLowPerformanceDevice) document.documentElement.classList.add('low-performance');
         let textSizeLevel = 2;
         let isHorizontalFlipped = false;
         let isVerticalFlipped = false;
         let isPrompterMode = false;
-        let importedJsonBaseName = 'iPrompter';
+        let importedJsonBaseName = 'prompter';
 
         if (!Array.prototype.flatMap) {
             Array.prototype.flatMap = function (callback, thisArg) {
@@ -835,8 +998,10 @@ for listening to my story.</textarea>
         const countdownNumber = document.getElementById('countdown-number');
         const fixedTimer = document.getElementById('fixed-timer');
         const edgeGlow = document.getElementById('edge-glow');
+        const wpmInput = document.getElementById('wpm-input');
         const minutesInput = document.getElementById('minutes-input');
         const secondsInput = document.getElementById('seconds-input');
+        const lineDelayInput = document.getElementById('line-delay-input');
         const jsonFileInput = document.getElementById('json-file-input');
         const htmlDownloadBtn = document.getElementById('html-download-btn');
         const controlsContainer = document.getElementById('controls-container');
@@ -878,22 +1043,40 @@ for listening to my story.</textarea>
         }
 
 
+
+        function getConfiguredHtmlFileName() {
+            const nameParts = importedJsonBaseName
+                .replace(/\.json$/i, '')
+                .split(/[_\s-]+/)
+                .map(part => part.trim())
+                .filter(Boolean)
+                .filter(part => !/^(speech|script|prompter|\d+)$/i.test(part));
+            const personName = nameParts.slice(0, 2)
+                .join('_')
+                .toLowerCase()
+                .replace(/[^a-z0-9가-힣_]+/g, '');
+            return `${personName || 'prompter'}.html`;
+        }
         function downloadConfiguredHtml() {
             const clone = document.documentElement.cloneNode(true);
             const clonedSetup = clone.querySelector('#setup-container');
             const clonedPrompter = clone.querySelector('#prompter-container');
             const clonedTextDisplay = clone.querySelector('#text-display');
             const clonedTextarea = clone.querySelector('#script-input');
+            const clonedWpm = clone.querySelector('#wpm-input');
             const clonedMinutes = clone.querySelector('#minutes-input');
             const clonedSeconds = clone.querySelector('#seconds-input');
+            const clonedLineDelay = clone.querySelector('#line-delay-input');
             const clonedDownloadButton = clone.querySelector('#html-download-btn');
 
             clonedSetup.classList.remove('hidden');
             clonedPrompter.classList.remove('active', 'flip-horizontal', 'flip-vertical');
             clonedTextDisplay.innerHTML = '';
             clonedTextarea.textContent = scriptInput.value;
+            clonedWpm.setAttribute('value', wpmInput.value || '135');
             clonedMinutes.setAttribute('value', minutesInput.value || '0');
             clonedSeconds.setAttribute('value', secondsInput.value || '0');
+            clonedLineDelay.setAttribute('value', lineDelayInput.value || '0');
             clonedDownloadButton.removeAttribute('disabled');
 
             let html = '<!DOCTYPE html>\n' + clone.outerHTML;
@@ -904,7 +1087,7 @@ for listening to my story.</textarea>
             html = html.replace('let isVerticalFlipped = false;', `let isVerticalFlipped = ${isVerticalFlipped};`);
 
             const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-            const fileName = `${importedJsonBaseName}_prompter_v1.58.html`;
+            const fileName = getConfiguredHtmlFileName();
             if (navigator.msSaveOrOpenBlob) {
                 navigator.msSaveOrOpenBlob(blob, fileName);
                 return;
@@ -924,7 +1107,13 @@ for listening to my story.</textarea>
             if (!file) return;
 
             try {
-                const data = JSON.parse(await file.text());
+                const rawJson = await file.text();
+                const normalizedJson = rawJson
+                    .replace(/^\uFEFF/, '')
+                    .trim()
+                    .replace(/^```(?:json)?\s*/i, '')
+                    .replace(/\s*```(?:\s*\[cite:\s*[^\]]+\])?\s*$/i, '');
+                const data = JSON.parse(normalizedJson);
                 const readingScript = findReadingScript(data);
                 if (!readingScript) {
                     throw new Error('"영문_끊어읽기_원고" 항목을 찾을 수 없습니다.');
@@ -936,6 +1125,7 @@ for listening to my story.</textarea>
                     .map(line => line.trim())
                     .filter(Boolean)
                     .join('\n');
+                updateDurationFromWpm();
                 importedJsonBaseName = file.name.replace(/\.json$/i, '') || 'iPrompter';
                 htmlDownloadBtn.disabled = false;
             } catch (error) {
@@ -944,9 +1134,26 @@ for listening to my story.</textarea>
                 event.target.value = '';
             }
         });
-        scriptInput.value = "Hello, everyone.\nMy name is Sol,\nand I go to Jeo-Chung Elementary School.\nOne day,\nwhile watching the news with my father,\nI saw a drone\nrescue a person\nwho was lost deep in the mountains.\nI asked my dad\nhow it could fly and save people.\nThat was the moment\nI realized\nscience can actually save lives,\njust like a superhero.\nMy father explained\nscience is everywhere\nto help us.\nThanks to science,\nwe have better medicine\nto cure sick people,\nairplanes can fly safely\nacross the world,\nand even our car’s navigation system\nuses math and satellites\nto guide us\non family trips.\nI thought\nthat was amazing!\nLearning about all these useful inventions\ngave me a big dream:\nI want to become a scientist.\nTo make my dream come true,\nI read science books,\ndo simple experiments,\nand ask lots of questions.\nOf course,\nI also study English hard!\nWith English,\nI can learn so much more\nabout the world,\nand share my ideas\nwith friends from other countries.\nI am small,\nbut my dream is big.\nSomeday,\nas a great scientist,\nI will invent things\nthat make everyday life happier\nfor everyone here.\nThank you\nfor listening to my story.";
+        scriptInput.value = "어머님, 아버님 안녕하십니까.\n\n중학교 올라가서 아이가 성적표에 'A'를 딱 찍어오면 마음이 어떠십니까?\n\"야~ 그래도 우리 애가 초등학교 때 시험 안 봐서 걱정했는데, 중학교 와서 A 받아오는 거 보니 공부 잘하고 있네! 고등학교 가서도 1등급 받겠어!\"\n\n속으로 이렇게 안도하시고, 맛있는 거 사주시고 뿌듯해하셨죠?\n죄송하지만 오늘 첫마디부터 뼈 아주 세게 때리고 시작해보겠습니다.\n\n중학교 성적표에 찍혀있는 그 'A', 그거 고등학교 가서 1등급 받는다는 소리가 절대 아닙니다. 아니, 심하게 말하면 4등급, 5등급으로 떡락할 수도 있는 거품 성적입니다.\n\n도대체 중학교 성적표의 숨겨진 비극이 무엇인지, 그리고 우리 아이들이 왜 학원이나 학교에 가서 '공부'를 안 하고 '구경'만 하다 오는지, 오늘 아주 낱낱이 파헤쳐 드리겠습니다.\n\n중학교 성적표가 왜 가관인 줄 아십니까?\n중학교 성적은 상대평가가 아니라 '절대평가'입니다. 90점만 넘으면 너도나도 다 'A'를 줍니다.\n그러다 보니 한 학교에서, 한 반에서 A를 받는 아이들이 전체의 몇 퍼센트인 줄 아십니까?\n\n많게는 30%, 심한 과목이나 학교는 40% 이상이 A를 받습니다.\n\n자, 수학적으로 계산해 봅시다.\n전체의 30~40%가 A를 받는다는 건, 고등학교 상대평가 기준(1등급 4%, 2등급 11%, 3등급 23%)으로 치면 1등급부터 4등급까지가 전부 다 중학교에서는 똑같은 'A'라는 탈을 쓰고 있다는 뜻입니다.\n\n그런데 학부모님들은 \"우리 애 A 받아왔으니까 상위권이네?\" 하고 착각을 하십니다.\n현실은요? A 받은 아이들 중 상당수가 학습이 굉장히 대충 되어 있고, 개념의 깊이가 전혀 없습니다.\n\n물론 언제나 존재하는 진짜 최상위권 아이들도 있죠. 하지만 그 밑에서 \"나도 A니까 쟤랑 비슷해\"라고 생각하며 방심하고 있는 수많은 아이들... 고등학교 올라가서 진짜 상대평가 성적표(4등급, 5등급) 받는 순간 mental이 완전히 박살 납니다.\n\n중학교 A 등급이라는 달콤한 거짓말에 속아 아이 공부를 대충 방치하시면 절대 안 됩니다.\n\n학부모님들, 집에서 아이한테 뭐 좀 물어보거나 문제 풀게 할 때 아이들이 가장 많이 하는 말이 뭡니까?\n\n\"아... 그거 아는 건데...\"\n\"아... 그거 아닌데... 아 맞다!\"\n\n이 소리 진짜 자주 듣죠?\n그럼 부모님들은 \"그래, 아는데 아쉽게 틀렸구나\" 하고 넘어가십니다.\n근데 현장에서 가르치는 제가 단언컨대, 아이가 말하는 \"아, 그거 아는 건데\"의 진짜 뜻이 뭔지 아십니까?\n\n\"나 그거 어디서 들어본 적은 있는데, 뭔지 정확히는 몰라.\" 입니다.\n\n이게 왜 이런 일이 벌어지는 줄 아십니까?\n아이들이 학교나 학원에 가서 '학습'을 한 게 아니라, 선생님이 수업하는 걸 '구경'하고 왔기 때문입니다.\n\n학원 강사가, 학교 선생님이 판서 멋지게 하고 칠판에 문제 쉽게 딱 풀어주니까, 앉아서 멍하니 보면서 \"아~ 저렇게 푸는 거구나\" 하고 고개 몇 번 끄덕입니다.\n그리고 집에 와서 자기가 공부를 아주 많이 한 줄 착각합니다.\n\n현실은 뭡니까? 공부와 학습은 선생님만 한 겁니다!\n선생님 실력만 나날이 좋아지고 있는 거예요! 웃프지 않습니까?\n매일 교재 연구하고 설명하는 선생님 실력만 일신우일신(日新又日新)하고, 정작 돈 내고 앉아있는 아이들은 인강이나 수업을 '영화 관람'하듯이 구경만 하다 집에 오는 겁니다.\n\n아이가 직접 펜을 들고, 자기 뇌를 쥐어짜내고, 자기 입으로 중얼거려보지 않은 지식은 절대 내 것이 되지 않습니다.\n\n저도 현장에서 아이들을 가르치는 사람 아닙니까?\n저는 수업 시간에 아이들 절대로 멍하니 구경하게 안 둡니다.\n주어진 태스크(Task)가 있으면, 저는 평소의 친근한 아저씨가 아니라 아주 무섭고 엄격한 선생님으로 변합니다.\n\n매일 단어 시험 보고, 개념 시험 봅니다.\n\n외우라고 강제로 시킵니다.\n\n손으로 쓰게 만들고, 소리 내서 읽게 하고, 자기 입으로 나한테 설명해보라고 시킵니다.\n\n아이가 직접 입을 열고, 손을 움직여서 머릿속에 있는 걸 밖으로 꺼내는 '출력(Output) 과정'이 없으면 그건 공부가 아닙니다.\n부모님들, 우리 어릴 때 어떻게 공부했습니까?\n손에 쥐나도록 써가면서 외우고, 백지에 써보고, 빽빽이 써가면서 억지로 머릿속에 쑤셔 넣었잖아요.\n\n시대가 변하고 디지털 시대가 됐어도, 인간의 뇌가 지식을 입력하고 저장하는 매커니즘은 옛날이나 지금이나 똑같습니다.\n암기 없는 이해는 모래 위에 쌓은 성입니다.\n초등 때부터 암기 시키셔야 합니다. 억지로라도 머리를 쓰게 강제하셔야 합니다.\n\n그럼 도대체 집에서 초등 학부모님들은 어떻게 해야 하냐?\n\n거창한 거 필요 없습니다.\n\"전 과목을 집에서 공부시키십시오.\"\n\n어려운 사교육, 비싼 학원 안 보내셔도 됩니다. EBS 방송이든, 시중에서 제일 유명한 자습서나 문제집이든 상관없습니다.\n아이 학년에 맞는 전 과목 책을 딱 정하세요. 국어, 수학, 영어뿐만 아니라 사회, 과학까지 빠짐없이 챙기셔야 합니다.\n\n그리고 부모님이 집에서 딱 3가지만 해주십시오.\n\n밀리지 않고 매일 자기 분량을 공부하게 만드세요. (엉덩이 힘 키우기)\n\n핵심 개념과 어휘는 반드시 소리 내어 읽고 '암기'하게 만드세요.\n\n그리고 부모님이 반드시 '평가(테스트)'를 해주십시오.\n\n아이가 책을 읽었다고 하면, \"다 읽었어?\" 하고 끝내지 마시고 책을 덮게 하세요.\n\"오늘 배운 사회 개념 중에 '지형'이 무슨 뜻인지 엄마한테 말해봐.\"\n\"오늘 과학에서 배운 실험 결과가 왜 그렇게 나왔는지 설명해봐.\"\n\n아이가 입을 떼지 못한다? 그럼 공부 안 한 겁니다. 구경만 하고 온 겁니다.\n다시 읽고 외워오라고 단호하게 보내셔야 합니다.\n이게 바로 아이를 망치는 잔소리가 아니라, 아이를 진짜 실력자로 만드는 부모의 관심이자 교육입니다.\n\n어머님, 아버님.\n\n중학교 성적표의 A 등급이라는 착시 현상, 그리고 \"학원 잘 다녀왔으니 공부했겠지\"라는 안일한 믿음에서 이제 그만 깨어나셔야 합니다.\n\n우리 아이가 수업 시간에 선생님을 구경하는 '관객'이 되게 두지 마십시오.\n자신이 직접 무대 위로 올라와서 땀 흘리고, 암기하고, 문제를 풀어내는 '선수'가 되게 만드셔야 합니다.\n\n그러려면 집에서 부모가 단호해져야 합니다.\n조금 귀찮으시더라도 전 과목 교재 챙겨주시고, 하루 30분이라도 외웠는지 직접 확인하시고 평가해 주십시오.\n\n그 억겁 같은 암기의 시간과 단호한 평가의 과정만이, 고등학교라는 진짜 전쟁터에 나갔을 때 우리 아이를 무너지지 않게 지켜주는 단단한 뿌리가 될 것입니다.\n\n오늘 영상도 뼈가 좀 많이 아프셨을 겁니다. 하지만 이게 현실입니다.\n영상이 도움 되셨다면 구독과 좋아요 눌러주시고, 다음 영상에서 더 단호한 팩트로 찾아뵙겠습니다.\n감사합니다.";
+        updateDurationFromWpm();
 
         // 프리셋 설정 함수
+
+        function countReadingWords(text) {
+            return (text.match(/[A-Za-z0-9]+(?:['’\-][A-Za-z0-9]+)*|[가-힣]+/g) || []).length;
+        }
+
+        function updateDurationFromWpm() {
+            const wordCount = countReadingWords(scriptInput.value);
+            const wpm = Math.max(1, parseFloat(wpmInput.value || 135));
+            const totalSeconds = wordCount > 0
+                ? Math.max(1, Math.ceil((wordCount / wpm) * 60))
+                : 0;
+            minutesInput.value = Math.floor(totalSeconds / 60);
+            secondsInput.value = totalSeconds % 60;
+        }
+        scriptInput.addEventListener('input', updateDurationFromWpm);
+        wpmInput.addEventListener('input', updateDurationFromWpm);
         function setPreset(min, sec) {
             minutesInput.value = min;
             secondsInput.value = sec;
@@ -967,20 +1174,8 @@ for listening to my story.</textarea>
         }
 
         function updateTimerPosition(currentIndex) {
-            const activeLine = document.getElementById(`line-${currentIndex}`);
-            if (!activeLine) return;
-
             activeLineIndex = currentIndex;
-            if (isPrompterMode) {
-                fixedTimer.style.top = `${Math.max(16, window.innerHeight * 0.08)}px`;
-                return;
-            }
-
-            const lineRect = activeLine.getBoundingClientRect();
-            const timerHeight = fixedTimer.offsetHeight || 30;
-            const controlsTop = controlsContainer ? controlsContainer.getBoundingClientRect().top : window.innerHeight;
-            const top = Math.min(lineRect.bottom + 10, controlsTop - timerHeight - 8);
-            fixedTimer.style.top = `${Math.max(8, top)}px`;
+            fixedTimer.style.top = `${Math.max(16, window.innerHeight * 0.08)}px`;
         }
         function applyPrompterView() {
             const sizeMultiplier = Math.pow(1.15, textSizeLevel);
@@ -1062,67 +1257,22 @@ for listening to my story.</textarea>
         }
 
         function updateActiveLine(currentIndex) {
+            activeLineIndex = currentIndex;
             if (currentIndex !== lastGlowLineIndex) {
                 lastGlowLineIndex = currentIndex;
                 edgeGlow.className = currentIndex % 2 === 0 ? 'left' : 'right';
                 void edgeGlow.offsetWidth;
                 edgeGlow.classList.add('pulse');
             }
-            document.querySelectorAll('.text-line').forEach((el, index) => {
-                // 클래스 초기화
-                el.className = 'text-line'; 
-                
-                if (index === currentIndex) {
-                    el.classList.add('active'); // 현재 줄 (흰색, 중앙)
-                } else if (index === currentIndex - 1 || index === currentIndex + 1) {
-                    el.classList.add('adjacent'); // 위아래 줄 (밝은 회색)
-                }
-                // 나머지는 기본 클래스(.text-line)만 유지되어 어둡고 블러처리 됨
-            });
-        }
-
-        function calculatePacingWeight(line) {
-            const trimmedLine = line.trim();
-            if (!trimmedLine) return 0.25;
-
-            const koreanCharacters = (trimmedLine.match(/[가-힣]/g) || []).length;
-            const englishWords = trimmedLine.match(/[A-Za-z]+(?:['’-][A-Za-z]+)*/g) || [];
-            const numberGroups = trimmedLine.match(/[0-9]+(?:[.,][0-9]+)*/g) || [];
-            const otherReadableCharacters = (trimmedLine
-                .replace(/[가-힣A-Za-z0-9\s.,;:!?'’"“”()\[\]{}\-]/g, '')
-                .match(/\S/g) || []).length;
-
-            const englishWeight = englishWords.reduce((total, word) => {
-                return total + 0.55 + (word.length * 0.08);
-            }, 0);
-            const numberWeight = numberGroups.reduce((total, number) => {
-                return total + 0.5 + (number.replace(/\D/g, '').length * 0.12);
-            }, 0);
-            const speakingWeight = (koreanCharacters * 0.34)
-                + englishWeight
-                + numberWeight
-                + (otherReadableCharacters * 0.28);
-
-            const commaPauses = (trimmedLine.match(/[,;]/g) || []).length * 0.22;
-            const phrasePauses = (trimmedLine.match(/[:()\[\]]/g) || []).length * 0.12;
-            const sentencePauses = (trimmedLine.match(/[.!?]/g) || []).length * 0.42;
-            const longSentenceBoost = 1 + Math.min(0.38, Math.max(0, speakingWeight - 5) * 0.025);
-
-            return Math.max(0.45,
-                (speakingWeight * longSentenceBoost)
-                + commaPauses
-                + phrasePauses
-                + sentencePauses
-            );
         }
 
         function formatPrompterLine(text) {
             if (!text || !text.trim()) return '&nbsp;';
-
             const trimmedText = text.trim();
             const endsSentence = /[.!?。？！…]["'’”)}\]]*$/.test(trimmedText);
             return endsSentence ? text : `${text} →`;
         }
+
         function startPrompter(usePrompterMirror) {
             if (typeof usePrompterMirror === 'boolean') {
                 isPrompterMode = usePrompterMirror;
@@ -1130,61 +1280,65 @@ for listening to my story.</textarea>
             }
             textSizeLevel = 2;
             document.body.classList.toggle('prompter-mirror-mode', isPrompterMode);
+
             const text = scriptInput.value.trim();
             if (!text) return;
 
-            // 화면 전환
             setupContainer.classList.add('hidden');
             prompterContainer.classList.add('active');
             enterFullscreen();
 
             const rawLines = text.split('\n');
-            
-            // 글자수에 따른 동적 시간 분배 (긴 줄은 길게, 짧은 줄은 짧게)
-            let totalPacingWeight = 0;
-            linesData = rawLines.map((line, index) => {
-                const pacingWeight = calculatePacingWeight(line);
-                totalPacingWeight += pacingWeight;
-                return { index, text: line, pacingWeight };
-            });
-
             const minutes = parseInt(minutesInput.value || 0);
             const seconds = parseInt(secondsInput.value || 0);
             const totalDurationMs = (minutes * 60 + seconds) * 1000;
-            let currentTimeMs = 0;
 
-            // DOM 렌더링
-            textDisplay.innerHTML = linesData.map((data, index) => {
-                data.duration = (data.pacingWeight / totalPacingWeight) * totalDurationMs;
+            scrollLinesData = rawLines.map((line, index) => ({
+                index,
+                text: line,
+                characterCount: Math.max(1, Array.from(line).length)
+            }));
+            const totalCharacterCount = scrollLinesData.reduce(
+                (total, data) => total + data.characterCount,
+                0
+            ) || 1;
+            let currentTimeMs = 0;
+            scrollLinesData.forEach(data => {
+                data.duration = (data.characterCount / totalCharacterCount) * totalDurationMs;
                 data.startTime = currentTimeMs;
                 currentTimeMs += data.duration;
+            });
 
+            linesData = scrollLinesData.slice();
+            for (let spacerIndex = 0; spacerIndex < 3; spacerIndex++) {
+                linesData.push({
+                    index: linesData.length,
+                    text: '',
+                    isSpacer: true,
+                    characterCount: 0,
+                    duration: 0,
+                    startTime: totalDurationMs
+                });
+            }
+
+            textDisplay.innerHTML = linesData.map((data, index) => {
                 return `<div class="text-line" id="line-${index}" onclick="jumpToLine(${index})">
-                    <span class="text-span">
-                        ${formatPrompterLine(data.text)}
-                        <div class="line-progress-track">
-                            <div class="line-progress-fill" id="line-fill-${index}"></div>
-                        </div>
-                    </span>
+                    <span class="text-span">${formatPrompterLine(data.text)}</span>
                 </div>`;
             }).join('');
 
             applyPrompterView();
 
-            // 초기화 후 카운트다운 시작
             setTimeout(() => {
-                rebuildLineProgressTracks();
                 linesData.forEach(data => {
-                    const el = document.getElementById(`line-${data.index}`);
-                    data.offsetTop = el.offsetTop;
-                    data.height = el.offsetHeight;
+                    const element = document.getElementById(`line-${data.index}`);
+                    data.offsetTop = element.offsetTop;
+                    data.height = element.offsetHeight;
                 });
-                
                 resetPrompterState();
                 startCountdown(5, () => { play(); });
             }, 300);
         }
-
 
         function rebuildLineProgressTracks() {
             document.querySelectorAll('.text-line').forEach(line => {
@@ -1255,11 +1409,17 @@ for listening to my story.</textarea>
                     textSpan.appendChild(track);
                 });
                 textSpan.style.transform = previousInlineTransform;
+                const lineIndex = parseInt(line.id.replace('line-', ''), 10);
+                if (linesData[lineIndex]) {
+                    linesData[lineIndex].progressFills = Array.from(line.querySelectorAll('.line-progress-fill'));
+                }
             });
         }
 
         function updateLineProgress(lineIndex, progress) {
-            document.querySelectorAll(`#line-${lineIndex} .line-progress-fill`).forEach(fill => {
+            const lineData = linesData[lineIndex];
+            const progressFills = lineData && lineData.progressFills ? lineData.progressFills : [];
+            progressFills.forEach(fill => {
                 const segmentStart = parseFloat(fill.dataset.segmentStart || 0);
                 const segmentEnd = parseFloat(fill.dataset.segmentEnd || 1);
                 const segmentProgress = Math.max(0, Math.min(1,
@@ -1270,6 +1430,8 @@ for listening to my story.</textarea>
         }
         function resetPrompterState() {
             lastGlowLineIndex = -1;
+            renderedActiveLineIndex = -1;
+            lastRenderTimestamp = 0;
             prompterContainer.scrollTop = 0;
             progressBar.style.width = '100%';
             updateActiveLine(0);
@@ -1307,6 +1469,11 @@ for listening to my story.</textarea>
         }
         function step(timestamp) {
             if (!startTime) startTime = timestamp;
+            if (isLowPerformanceDevice && lastRenderTimestamp && timestamp - lastRenderTimestamp < 33) {
+                animationId = requestAnimationFrame(step);
+                return;
+            }
+            lastRenderTimestamp = timestamp;
             
             if (isPlaying) {
                 const elapsed = timestamp - startTime + pausedTime;
@@ -1317,45 +1484,46 @@ for listening to my story.</textarea>
                 progressBar.style.width = `${(1 - globalProgress) * 100}%`;
                 updateTimerDisplay(elapsed);
 
-                // 2. 현재 활성화된 줄 찾기
-                let currentLineIndex = 0;
-                let lineProgress = 0;
-
-                for (let i = 0; i < linesData.length; i++) {
-                    const line = linesData[i];
+                // 2. 띄어쓰기 포함 글자 수에 따라 줄별 스크롤 시간을 배분
+                let scrollLineIndex = 0;
+                let scrollLineProgress = 0;
+                for (let index = 0; index < scrollLinesData.length; index++) {
+                    const line = scrollLinesData[index];
                     if (elapsed >= line.startTime && elapsed < line.startTime + line.duration) {
-                        currentLineIndex = i;
-                        lineProgress = (elapsed - line.startTime) / line.duration;
+                        scrollLineIndex = index;
+                        scrollLineProgress = (elapsed - line.startTime) / Math.max(1, line.duration);
                         break;
                     }
-                    if (i === linesData.length - 1 && elapsed >= line.startTime) {
-                        currentLineIndex = i;
-                        lineProgress = 1;
+                    if (index === scrollLinesData.length - 1 && elapsed >= line.startTime) {
+                        scrollLineIndex = index;
+                        scrollLineProgress = 1;
                     }
                 }
 
-                // 3. 밑줄 진행바 실시간 축소 (1 -> 0)
-                updateLineProgress(currentLineIndex, lineProgress);
+                const currentLine = scrollLinesData[scrollLineIndex];
+                const nextLine = scrollLinesData[Math.min(scrollLineIndex + 1, scrollLinesData.length - 1)];
+                const currentTarget = currentLine.offsetTop
+                    - (prompterContainer.clientHeight / 2)
+                    + (currentLine.height / 2);
+                const nextTarget = nextLine.offsetTop
+                    - (prompterContainer.clientHeight / 2)
+                    + (nextLine.height / 2);
+                const targetScroll = currentTarget
+                    + ((nextTarget - currentTarget) * scrollLineProgress);
+                const maxScroll = Math.max(0,
+                    prompterContainer.scrollHeight - prompterContainer.clientHeight
+                );
+                prompterContainer.scrollTop = Math.max(0, Math.min(maxScroll, targetScroll));
 
-                // 4. 스크롤 위치 계산 (현재 줄을 화면 정중앙 50vh에 위치)
-                const currentLineData = linesData[currentLineIndex];
-                const currentLineElement = document.getElementById(`line-${currentLineIndex}`);
-                const containerRect = prompterContainer.getBoundingClientRect();
-                const currentRect = currentLineElement.getBoundingClientRect();
-                const currentCenter = currentRect.top + (currentRect.height / 2);
-                const viewportCenter = containerRect.top + (containerRect.height / 2);
-                const targetScroll = prompterContainer.scrollTop + currentCenter - viewportCenter;
-
-                prompterContainer.scrollTop = Math.max(0, targetScroll);
-                updateActiveLine(currentLineIndex);
-                updateTimerPosition(currentLineIndex);
-
+                if (scrollLineIndex !== renderedActiveLineIndex) {
+                    updateActiveLine(scrollLineIndex);
+                    renderedActiveLineIndex = scrollLineIndex;
+                }
                 if (elapsed < totalDurationMs) {
                     animationId = requestAnimationFrame(step);
                 } else {
                     isPlaying = false;
                     releaseWakeLock();
-                    centerActiveLine(currentLineIndex);
                     playPauseBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="black"><path d="M8 5v14l11-7z"/></svg>';
                 }
             }
@@ -1366,6 +1534,7 @@ for listening to my story.</textarea>
                 isPlaying = true;
                 requestWakeLock();
                 startTime = null; // step에서 재할당
+                lastRenderTimestamp = 0;
                 animationId = requestAnimationFrame(step);
                 playPauseBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="black"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
             }
@@ -1395,7 +1564,6 @@ for listening to my story.</textarea>
                 if (startTime) {
                     pausedTime += performance.now() - startTime;
                 }
-                centerActiveLine();
                 playPauseBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="black"><path d="M8 5v14l11-7z"/></svg>';
             }
         }
@@ -1431,23 +1599,24 @@ for listening to my story.</textarea>
         function jumpToLine(index) {
             pause();
             const targetLine = linesData[index];
-            pausedTime = targetLine.startTime;
-            
-            // 시각적 업데이트 강제 실행
-            centerActiveLine(index);
-            updateActiveLine(index);
             const totalMs = (parseInt(minutesInput.value || 0) * 60 + parseInt(secondsInput.value || 0)) * 1000;
+            const maxScroll = Math.max(1,
+                prompterContainer.scrollHeight - prompterContainer.clientHeight
+            );
+            const targetScroll = Math.max(0,
+                targetLine.offsetTop - (prompterContainer.clientHeight / 2) + (targetLine.height / 2)
+            );
+            prompterContainer.scrollTop = targetScroll;
+            pausedTime = Math.min(totalMs, (targetScroll / maxScroll) * totalMs);
+            updateActiveLine(index);
+            renderedActiveLineIndex = index;
             updateTimerDisplay(pausedTime);
-            updateTimerPosition(index);
             progressBar.style.width = `${(1 - pausedTime / totalMs) * 100}%`;
         }
 
         // 사용자가 수동으로 스크롤하면 자동 스크롤 일시 정지
         prompterContainer.addEventListener('touchstart', () => {
             if (isPlaying) pause();
-        }, { passive: true });
-        prompterContainer.addEventListener('touchend', () => {
-            if (!isPlaying) setTimeout(() => centerActiveLine(), 80);
         }, { passive: true });
 
         function refreshLayout() {
@@ -1482,5 +1651,5 @@ for listening to my story.</textarea>
             }
         });
     </script>
-</body>
-</html>
+
+</body></html>
