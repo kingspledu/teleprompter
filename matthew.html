@@ -674,55 +674,43 @@
 My name is Matthew.
 I am in Year 3
 at NLCS Jeju.
-Today, I want to share my dream
-with you.
+Today, I want to share my dream with you.
 When I was little,
-I loved building houses
-with Lego bricks.
+I loved building houses with Lego bricks.
 I spent hours
 making different buildings.
-I loved making new cities,
-too.
+I loved making new cities, too.
 One day,
 I had a big thought.
 I saw that real architects
 do the same thing.
-That was when
-I knew my path.
-I want to be
-a great architect.
+That was when I knew my path.
+I want to be a great architect.
 Now, I do small things
 to reach my dream.
-I enjoy building with blocks
-at home.
-I draw new buildings
-on my paper.
-I imagine my own designs
-every day.
+I enjoy building with blocks at home.
+I draw new buildings on my paper.
+I imagine my own designs every day.
 When I travel with my family,
 I look at nice buildings.
-I learn a lot
-from them.
-I learned new things
-about this job.
-Architects make safe
-and cozy places.
+I learn a lot from them.
+I learned new things about this job.
+Architects make safe and cozy places.
 They make places
 where people live, study, and work.
 Good buildings
 make our cities nice and safe.
 Green buildings
 can help protect our Earth, too.
-I want to design nice homes
-and quiet libraries.
+I want to design
+nice homes and quiet libraries.
 I want to make buildings
 that bring big smiles.
 I hope my buildings
 help people live well.
 I want to build
 a bright and happy future.
-Thank you for listening
-to my story.</textarea>
+Thank you for listening to my story.</textarea>
         
         <div class="time-settings">
             <div class="time-inputs">
@@ -765,8 +753,8 @@ to my story.</textarea>
             <!-- 재생/일시정지 버튼 -->
             <button class="control-btn compact-label" onclick="changeTextSize(-1)" title="글자 작게" aria-label="글자 작게">A−</button>
             <button class="control-btn compact-label" onclick="changeTextSize(1)" title="글자 크게" aria-label="글자 크게">A＋</button>
-            <button class="control-btn compact-label" id="flip-horizontal-btn" onclick="toggleHorizontalFlip()" title="좌우 반전" aria-label="좌우 반전">좌우</button>
-            <button class="control-btn compact-label" id="flip-vertical-btn" onclick="toggleVerticalFlip()" title="상하 반전" aria-label="상하 반전">상하</button>
+            <button class="control-btn compact-label" id="flip-horizontal-btn" onclick="toggleHorizontalFlip()" title="좌우 반전" aria-label="좌우 반전" aria-pressed="false">좌우</button>
+            <button class="control-btn compact-label" id="flip-vertical-btn" onclick="toggleVerticalFlip()" title="상하 반전" aria-label="상하 반전" aria-pressed="false">상하</button>
             <button class="control-btn" id="play-pause-btn" onclick="togglePlay()" title="재생/일시정지">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="black"><path d="M8 5v14l11-7z"></path></svg>
             </button>
@@ -963,7 +951,7 @@ to my story.</textarea>
                 event.target.value = '';
             }
         });
-        scriptInput.value = "Hello, everyone.\nMy name is Matthew.\nI am in Year 3\nat NLCS Jeju.\nToday, I want to share my dream\nwith you.\nWhen I was little,\nI loved building houses\nwith Lego bricks.\nI spent hours\nmaking different buildings.\nI loved making new cities,\ntoo.\nOne day,\nI had a big thought.\nI saw that real architects\ndo the same thing.\nThat was when\nI knew my path.\nI want to be\na great architect.\nNow, I do small things\nto reach my dream.\nI enjoy building with blocks\nat home.\nI draw new buildings\non my paper.\nI imagine my own designs\nevery day.\nWhen I travel with my family,\nI look at nice buildings.\nI learn a lot\nfrom them.\nI learned new things\nabout this job.\nArchitects make safe\nand cozy places.\nThey make places\nwhere people live, study, and work.\nGood buildings\nmake our cities nice and safe.\nGreen buildings\ncan help protect our Earth, too.\nI want to design nice homes\nand quiet libraries.\nI want to make buildings\nthat bring big smiles.\nI hope my buildings\nhelp people live well.\nI want to build\na bright and happy future.\nThank you for listening\nto my story.";
+        scriptInput.value = "Hello, everyone.\nMy name is Matthew.\nI am in Year 3\nat NLCS Jeju.\nToday, I want to share my dream with you.\nWhen I was little,\nI loved building houses with Lego bricks.\nI spent hours\nmaking different buildings.\nI loved making new cities, too.\nOne day,\nI had a big thought.\nI saw that real architects\ndo the same thing.\nThat was when I knew my path.\nI want to be a great architect.\nNow, I do small things\nto reach my dream.\nI enjoy building with blocks at home.\nI draw new buildings on my paper.\nI imagine my own designs every day.\nWhen I travel with my family,\nI look at nice buildings.\nI learn a lot from them.\nI learned new things about this job.\nArchitects make safe and cozy places.\nThey make places\nwhere people live, study, and work.\nGood buildings\nmake our cities nice and safe.\nGreen buildings\ncan help protect our Earth, too.\nI want to design\nnice homes and quiet libraries.\nI want to make buildings\nthat bring big smiles.\nI hope my buildings\nhelp people live well.\nI want to build\na bright and happy future.\nThank you for listening to my story.";
 
         // 프리셋 설정 함수
         function setPreset(min, sec) {
