@@ -2,7 +2,7 @@
 <html lang="ko"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>iPrompter</title>
+    <title>iPrompter v1.82</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;900&display=swap');
 
@@ -43,6 +43,10 @@
         }
 
         h1 {
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            gap: 0.45rem;
             font-size: 2rem;
             font-weight: 700;
             margin-bottom: 1rem;
@@ -50,6 +54,15 @@
             background: linear-gradient(90deg, #fff, #aaa);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+        }
+
+        .app-version {
+            background: none;
+            color: #858585;
+            -webkit-text-fill-color: #858585;
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.03em;
         }
 
         textarea {
@@ -248,6 +261,33 @@
             transition: transform 0.1s;
         }
 
+        .practice-mask-options {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-bottom: 0.65rem;
+            color: #d2d2d2;
+            font-size: 0.9rem;
+        }
+
+        .practice-mask-options .option-title {
+            color: #9f9f9f;
+            font-weight: 600;
+        }
+
+        .practice-mask-options label {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            cursor: pointer;
+        }
+
+        .practice-mask-options input {
+            width: 18px;
+            height: 18px;
+            accent-color: #ffd84d;
+        }
         .start-actions {
             display: flex;
             gap: 0.75rem;
@@ -330,6 +370,10 @@
             max-width: 800px;
         }
 
+        .text-line.masked-line {
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
         /* 현재 줄의 위, 아래 줄 (밝은 회색) */
         .text-line.adjacent {
             color: rgba(255, 255, 255, 0.6);
@@ -558,8 +602,24 @@
 
         #next-line-btn {
             border-radius: 12px;
-            background: rgba(255, 224, 120, 0.16);
-            border: 1px solid rgba(255, 224, 120, 0.42);
+            background: #ffd84d;
+            border: 1px solid #ffe98f;
+            color: #171300;
+            gap: 0.3rem;
+            padding: 0.5rem 0.75rem;
+            width: auto;
+            font-size: 0.82rem;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        #next-line-btn:hover,
+        #next-line-btn:active {
+            background: #ffea8a;
+        }
+
+        body:not(.prompter-mirror-mode) #next-line-btn {
+            display: flex;
         }
 
         body.prompter-mirror-mode #next-line-btn {
@@ -574,6 +634,11 @@
 
         #play-pause-btn:hover, #play-pause-btn:active {
             background: #e0e0e0;
+        }
+
+        #play-pause-btn:disabled {
+            opacity: 0.45;
+            cursor: default;
         }
 
         .control-btn.compact-label {
@@ -661,7 +726,7 @@
                 display: flex;
                 display: grid;
                 grid-template-columns: minmax(0, 1fr) minmax(220px, 32vw);
-                grid-template-rows: auto 1fr auto;
+                grid-template-rows: auto 1fr auto auto;
                 gap: 0.65rem 1rem;
                 padding: 0.65rem 0.85rem;
                 padding: max(0.65rem, env(safe-area-inset-top)) max(0.85rem, env(safe-area-inset-right)) max(0.65rem, env(safe-area-inset-bottom)) max(0.85rem, env(safe-area-inset-left));
@@ -689,7 +754,7 @@
 
             #script-input {
                 grid-column: 1;
-                grid-row: 1 / 4;
+                grid-row: 1 / 5;
                 min-height: 0;
                 margin: 0;
                 padding: 1rem;
@@ -731,9 +796,17 @@
                 font-size: 0.72rem;
             }
 
-            .start-actions {
+            .practice-mask-options {
                 grid-column: 2;
                 grid-row: 3;
+                margin: 0;
+                gap: 0.4rem;
+                font-size: 0.76rem;
+            }
+
+            .start-actions {
+                grid-column: 2;
+                grid-row: 4;
             }
 
             .start-btn {
@@ -808,7 +881,7 @@
 </head>
 <body>
     <div id="setup-container">
-        <h1>iPrompter</h1>
+        <h1>iPrompter <span class="app-version">v1.82</span></h1>
         
                 <textarea id="script-input" placeholder="여기에 읽을 대본을 입력하세요...">Hello.
 My name is Gyu-Yeon Kim.
@@ -883,9 +956,15 @@ Thank you for listening.</textarea>
             </div>
         </div>
 
+        <div class="practice-mask-options" aria-label="연습 원고 뒤쪽 가리기">
+            <span class="option-title">뒤에서 가리기</span>
+            <label><input type="checkbox" class="practice-mask-checkbox" value="30" onchange="selectPracticeMask(this)">30%</label>
+            <label><input type="checkbox" class="practice-mask-checkbox" value="50" onchange="selectPracticeMask(this)">50%</label>
+            <label><input type="checkbox" class="practice-mask-checkbox" value="70" onchange="selectPracticeMask(this)" checked="checked">70%</label>
+        </div>
         <div class="start-actions">
-            <button class="start-btn practice-start-btn" onclick="startPrompter(false)">연습 시작</button>
-            <button class="start-btn" onclick="startPrompter(true)">프롬프터 시작 v1.70</button>
+            <button class="start-btn practice-start-btn" onclick="startPractice()">연습 시작</button>
+            <button class="start-btn" onclick="startPrompter(true)">프롬프터 시작 v1.82</button>
         </div>
     </div>
 
@@ -909,13 +988,14 @@ Thank you for listening.</textarea>
             <button class="control-btn compact-label" onclick="changeTextSize(1)" title="글자 크게" aria-label="글자 크게">A＋</button>
             <button class="control-btn compact-label" id="flip-horizontal-btn" onclick="toggleHorizontalFlip()" title="좌우 반전" aria-label="좌우 반전">좌우</button>
             <button class="control-btn compact-label" id="flip-vertical-btn" onclick="toggleVerticalFlip()" title="상하 반전" aria-label="상하 반전">상하</button>
-            <button class="control-btn" id="play-pause-btn" onclick="togglePlay()" title="재생/일시정지">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="black"><path d="M8 5v14l11-7z"></path></svg>
+            <button class="control-btn" id="play-pause-btn" onclick="pause()" title="일시정지" aria-label="일시정지">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="black"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>
             </button>
             
             <!-- 처음부터 다시 버튼 -->
             <button class="control-btn" id="next-line-btn" onclick="advanceToNextLine()" title="다음 문장" aria-label="다음 문장">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"></path></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
+                <span>다음 문장</span>
             </button>
             <button class="control-btn" onclick="restart()" title="처음부터">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"></path></svg>
@@ -950,6 +1030,8 @@ Thank you for listening.</textarea>
         let renderedActiveLineIndex = -1;
         let lastRenderTimestamp = 0;
         let lastRemoteAdvanceAt = 0;
+        let gamepadPollingStarted = false;
+        let lastGamepadTriggerState = false;
         const isLowPerformanceDevice = /Silk|Kindle|KF[A-Z]{2,}/i.test(navigator.userAgent)
             || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
         if (isLowPerformanceDevice) document.documentElement.classList.add('low-performance');
@@ -958,6 +1040,7 @@ Thank you for listening.</textarea>
         let isVerticalFlipped = false;
         let isPrompterMode = false;
         let importedJsonBaseName = 'prompter';
+        let practiceMaskPercent = 0;
         let jsonDirectoryHandle = null;
         let rememberedJsonDirectoryHandle = null;
         let currentJsonFileHandle = null;
@@ -1056,6 +1139,31 @@ Thank you for listening.</textarea>
                 .replace(/\s*```(?:\s*\[cite:\s*[^\]]+\])?\s*$/i, '');
         }
 
+        function setPracticeMaskPercent(percent) {
+            practiceMaskPercent = [30, 50, 70].indexOf(Number(percent)) !== -1 ? Number(percent) : 0;
+            document.querySelectorAll('.practice-mask-checkbox').forEach(checkbox => {
+                checkbox.checked = Number(checkbox.value) === practiceMaskPercent;
+                if (checkbox.checked) checkbox.setAttribute('checked', 'checked');
+                else checkbox.removeAttribute('checked');
+            });
+        }
+
+        function selectPracticeMask(checkbox) {
+            setPracticeMaskPercent(checkbox.checked ? Number(checkbox.value) : 0);
+        }
+
+        function maskPracticeText(text) {
+            if (!practiceMaskPercent) return text;
+            return text.split(/\r?\n/).map(line => {
+                const characters = Array.from(line);
+                const hiddenCount = Math.ceil(characters.length * practiceMaskPercent / 100);
+                const visibleCount = Math.max(0, characters.length - hiddenCount);
+                return characters.map((character, index) => {
+                    if (index < visibleCount || /\s/.test(character)) return character;
+                    return '_';
+                }).join('');
+            }).join('\n');
+        }
         function applyPrompterSettings(settings) {
             if (!settings || typeof settings !== 'object') return;
             if (settings.wpm != null) wpmInput.value = settings.wpm;
@@ -1065,6 +1173,7 @@ Thank you for listening.</textarea>
             if (settings.textSizeLevel != null) textSizeLevel = Number(settings.textSizeLevel) || 2;
             isHorizontalFlipped = Boolean(settings.isHorizontalFlipped);
             isVerticalFlipped = Boolean(settings.isVerticalFlipped);
+            setPracticeMaskPercent(settings.practiceMaskPercent);
         }
 
         function getPrompterSettings() {
@@ -1075,7 +1184,8 @@ Thank you for listening.</textarea>
                 lineDelay: Number(lineDelayInput.value || 0),
                 textSizeLevel,
                 isHorizontalFlipped,
-                isVerticalFlipped
+                isVerticalFlipped,
+                practiceMaskPercent
             };
         }
 
@@ -1487,10 +1597,39 @@ Thank you for listening.</textarea>
         function formatPrompterLine(text) {
             if (!text || !text.trim()) return '&nbsp;';
             const trimmedText = text.trim();
+            if (text.includes('_')) return text;
             const endsSentence = /[.!?。？！…]["'’”)}\]]*$/.test(trimmedText);
             return endsSentence ? text : `${text} →`;
         }
 
+        function startPractice() {
+            const checkedMask = document.querySelector('.practice-mask-checkbox:checked');
+            setPracticeMaskPercent(checkedMask ? Number(checkedMask.value) : 0);
+            startPrompter(false);
+        }
+        function togglePracticeLine(index) {
+            const lineData = linesData[index];
+            if (!lineData || lineData.isSpacer) return;
+
+            lineData.isRevealed = !lineData.isRevealed;
+            lineData.text = lineData.isRevealed ? lineData.originalText : lineData.maskedText;
+            const textSpan = document.querySelector(`#line-${index} .text-span`);
+            if (!textSpan) return;
+            textSpan.closest('.text-line').classList.toggle('masked-line', !lineData.isRevealed);
+            const textNode = Array.from(textSpan.childNodes).find(node => node.nodeType === Node.TEXT_NODE);
+            if (textNode) textNode.textContent = formatPrompterLine(lineData.text);
+            rebuildLineProgressTracks();
+            setTimeout(refreshLayout, 0);
+        }
+
+        function handleLineTap(index, event) {
+            if (event) event.stopPropagation();
+            if (!isPrompterMode && practiceMaskPercent) {
+                togglePracticeLine(index);
+                return;
+            }
+            jumpToLine(index);
+        }
         function startPrompter(usePrompterMirror) {
             if (typeof usePrompterMirror === 'boolean') {
                 isPrompterMode = usePrompterMirror;
@@ -1499,13 +1638,19 @@ Thank you for listening.</textarea>
             textSizeLevel = 2;
             document.body.classList.toggle('prompter-mirror-mode', isPrompterMode);
 
-            const text = scriptInput.value.trim();
-            if (!text) return;
+            const sourceText = scriptInput.value.trim();
+            if (!sourceText) return;
+            if (!isPrompterMode) {
+                const checkedMask = document.querySelector('.practice-mask-checkbox:checked');
+                setPracticeMaskPercent(checkedMask ? Number(checkedMask.value) : 0);
+            }
+            const text = isPrompterMode ? sourceText : maskPracticeText(sourceText);
 
             setupContainer.classList.add('hidden');
             prompterContainer.classList.add('active');
             enterFullscreen();
 
+            const originalLines = sourceText.split('\n');
             const rawLines = text.split('\n');
             const minutes = parseInt(minutesInput.value || 0);
             const seconds = parseInt(secondsInput.value || 0);
@@ -1514,6 +1659,9 @@ Thank you for listening.</textarea>
             scrollLinesData = rawLines.map((line, index) => ({
                 index,
                 text: line,
+                originalText: originalLines[index] || '',
+                maskedText: line,
+                isRevealed: false,
                 characterCount: Math.max(1, Array.from(line).length)
             }));
             const totalCharacterCount = scrollLinesData.reduce(
@@ -1540,7 +1688,8 @@ Thank you for listening.</textarea>
             }
 
             textDisplay.innerHTML = linesData.map((data, index) => {
-                return `<div class="text-line" id="line-${index}" onclick="jumpToLine(${index})">
+                const maskedClass = data.text.includes('_') ? ' masked-line' : '';
+                return `<div class="text-line${maskedClass}" id="line-${index}" onclick="handleLineTap(${index}, event)">
                     <span class="text-span">${formatPrompterLine(data.text)}</span>
                 </div>`;
             }).join('');
@@ -1719,7 +1868,10 @@ Thank you for listening.</textarea>
                 }
 
                 const currentLine = scrollLinesData[scrollLineIndex];
-                const nextLine = scrollLinesData[Math.min(scrollLineIndex + 1, scrollLinesData.length - 1)];
+                const isLastScrollLine = scrollLineIndex === scrollLinesData.length - 1;
+                const nextLine = isLastScrollLine
+                    ? linesData[linesData.length - 1]
+                    : scrollLinesData[scrollLineIndex + 1];
                 const currentTarget = currentLine.offsetTop
                     - (prompterContainer.clientHeight / 2)
                     + (currentLine.height / 2);
@@ -1745,7 +1897,7 @@ Thank you for listening.</textarea>
                     startTime = null;
                     updateTimerDisplay(totalDurationMs);
                     releaseWakeLock();
-                    playPauseBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="black"><path d="M8 5v14l11-7z"/></svg>';
+                    playPauseBtn.disabled = true;
                 }
             }
         }
@@ -1817,14 +1969,21 @@ Thank you for listening.</textarea>
         function isShutterAdvanceKey(event) {
             const supportedKeys = [
                 'Enter', ' ', 'Spacebar', 'ArrowRight', 'PageDown',
-                'MediaTrackNext', 'AudioVolumeUp', 'AudioVolumeDown', 'Camera'
+                'MediaTrackNext', 'AudioVolumeUp', 'AudioVolumeDown',
+                'VolumeUp', 'VolumeDown', 'Camera'
+            ];
+            const supportedCodes = [
+                'Enter', 'NumpadEnter', 'Space', 'ArrowRight', 'PageDown',
+                'MediaTrackNext', 'AudioVolumeUp', 'AudioVolumeDown',
+                'VolumeUp', 'VolumeDown', 'Camera'
             ];
             const supportedKeyCodes = [13, 32, 34, 39, 174, 175, 176];
             return supportedKeys.indexOf(event.key) !== -1
+                || supportedCodes.indexOf(event.code) !== -1
                 || supportedKeyCodes.indexOf(event.keyCode) !== -1;
         }
 
-        document.addEventListener('keydown', event => {
+        function handleRemoteAdvance(event) {
             if (!isPrompterMode
                 || !prompterContainer.classList.contains('active')
                 || !isShutterAdvanceKey(event)
@@ -1835,15 +1994,65 @@ Thank you for listening.</textarea>
             lastRemoteAdvanceAt = now;
             event.preventDefault();
             advanceToNextLine();
-        });
+        }
+
+        document.addEventListener('keydown', handleRemoteAdvance);
+        document.addEventListener('keyup', handleRemoteAdvance);
+        function pollGamepadRemote() {
+            const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+            let triggerPressed = false;
+
+            for (const gamepad of gamepads) {
+                if (!gamepad) continue;
+                const buttonPressed = gamepad.buttons.some(button => button.pressed);
+                const horizontalAxis = gamepad.axes[0] || 0;
+                const verticalAxis = gamepad.axes[1] || 0;
+                const directionalPressed = horizontalAxis > 0.65 || verticalAxis > 0.65;
+                if (buttonPressed || directionalPressed) {
+                    triggerPressed = true;
+                    break;
+                }
+            }
+
+            if (triggerPressed && !lastGamepadTriggerState
+                && isPrompterMode
+                && prompterContainer.classList.contains('active')) {
+                const now = Date.now();
+                if (now - lastRemoteAdvanceAt >= 350) {
+                    lastRemoteAdvanceAt = now;
+                    advanceToNextLine();
+                }
+            }
+
+            lastGamepadTriggerState = triggerPressed;
+            requestAnimationFrame(pollGamepadRemote);
+        }
+
+        function startGamepadRemoteSupport() {
+            if (gamepadPollingStarted || !navigator.getGamepads) return;
+            gamepadPollingStarted = true;
+            requestAnimationFrame(pollGamepadRemote);
+        }
+
+        window.addEventListener('gamepadconnected', startGamepadRemoteSupport);
+        startGamepadRemoteSupport();
+
+        if ('mediaSession' in navigator && navigator.mediaSession.setActionHandler) {
+            try {
+                navigator.mediaSession.setActionHandler('nexttrack', advanceToNextLine);
+                navigator.mediaSession.setActionHandler('seekforward', advanceToNextLine);
+            } catch (error) {
+                console.log('Media remote actions are not supported:', error);
+            }
+        }
         function play() {
             if (!isPlaying) {
                 isPlaying = true;
+                playPauseBtn.disabled = false;
                 requestWakeLock();
-                startTime = null; // step에서 재할당
+                startTime = null;
                 lastRenderTimestamp = 0;
                 animationId = requestAnimationFrame(step);
-                playPauseBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="black"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
             }
         }
 
@@ -1864,26 +2073,17 @@ Thank you for listening.</textarea>
             updateTimerPosition(lineIndex);
         }
         function pause() {
-            if (isPlaying) {
-                isPlaying = false;
-                    pausedTime = totalDurationMs;
-                    startTime = null;
-                    updateTimerDisplay(totalDurationMs);
-                    releaseWakeLock();
-                cancelAnimationFrame(animationId);
-                if (startTime) {
-                    pausedTime += performance.now() - startTime;
-                }
-                playPauseBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="black"><path d="M8 5v14l11-7z"/></svg>';
-            }
-        }
+            if (!isPlaying) return;
 
-        function togglePlay() {
-            if (isPlaying) {
-                pause();
-            } else {
-                startCountdown(3, () => { play(); }); // 일시정지 후 재생시는 3초 카운트
-            }
+            const elapsedAtPause = startTime !== null
+                ? performance.now() - startTime + pausedTime
+                : pausedTime;
+            isPlaying = false;
+            cancelAnimationFrame(animationId);
+            pausedTime = elapsedAtPause;
+            startTime = null;
+            playPauseBtn.disabled = true;
+            releaseWakeLock();
         }
 
         function restart() {
@@ -1925,7 +2125,9 @@ Thank you for listening.</textarea>
         }
 
         // 사용자가 수동으로 스크롤하면 자동 스크롤 일시 정지
-        prompterContainer.addEventListener('touchstart', () => {
+        prompterContainer.addEventListener('touchstart', event => {
+            if (event.target.closest('#controls-container')) return;
+            if (!isPrompterMode && practiceMaskPercent && event.target.closest('.text-line')) return;
             if (isPlaying) pause();
         }, { passive: true });
 
@@ -1961,5 +2163,6 @@ Thank you for listening.</textarea>
             }
         });
     </script>
+
 
 </body></html>
