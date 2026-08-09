@@ -2,7 +2,7 @@
 <html lang="ko"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>iPrompter v1.79</title>
+    <title>iPrompter v1.81</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;900&display=swap');
 
@@ -881,7 +881,7 @@
 </head>
 <body>
     <div id="setup-container">
-        <h1>iPrompter <span class="app-version">v1.79</span></h1>
+        <h1>iPrompter <span class="app-version">v1.81</span></h1>
         
                 <textarea id="script-input" placeholder="여기에 읽을 대본을 입력하세요...">Hello, everyone.
 My name is Sol,
@@ -958,7 +958,7 @@ Thank you for listening to my story.</textarea>
         </div>
         <div class="start-actions">
             <button class="start-btn practice-start-btn" onclick="startPractice()">연습 시작</button>
-            <button class="start-btn" onclick="startPrompter(true)">프롬프터 시작 v1.79</button>
+            <button class="start-btn" onclick="startPrompter(true)">프롬프터 시작 v1.81</button>
         </div>
     </div>
 
@@ -1024,6 +1024,8 @@ Thank you for listening to my story.</textarea>
         let renderedActiveLineIndex = -1;
         let lastRenderTimestamp = 0;
         let lastRemoteAdvanceAt = 0;
+        let gamepadPollingStarted = false;
+        let lastGamepadTriggerState = false;
         const isLowPerformanceDevice = /Silk|Kindle|KF[A-Z]{2,}/i.test(navigator.userAgent)
             || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
         if (isLowPerformanceDevice) document.documentElement.classList.add('low-performance');
@@ -1032,7 +1034,7 @@ Thank you for listening to my story.</textarea>
         let isVerticalFlipped = false;
         let isPrompterMode = false;
         let importedJsonBaseName = 'prompter';
-        let practiceMaskPercent = 30;
+        let practiceMaskPercent = 0;
         let jsonDirectoryHandle = null;
         let rememberedJsonDirectoryHandle = null;
         let currentJsonFileHandle = null;
@@ -1595,9 +1597,8 @@ Thank you for listening to my story.</textarea>
         }
 
         function startPractice() {
-            const checkedMask = document.querySelector('.practice-mask-checkbox:checked')
-                || document.querySelector('.practice-mask-checkbox[value="30"]');
-            setPracticeMaskPercent(checkedMask ? Number(checkedMask.value) : 30);
+            const checkedMask = document.querySelector('.practice-mask-checkbox:checked');
+            setPracticeMaskPercent(checkedMask ? Number(checkedMask.value) : 0);
             startPrompter(false);
         }
         function togglePracticeLine(index) {
@@ -1988,6 +1989,44 @@ Thank you for listening to my story.</textarea>
 
         document.addEventListener('keydown', handleRemoteAdvance);
         document.addEventListener('keyup', handleRemoteAdvance);
+        function pollGamepadRemote() {
+            const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+            let triggerPressed = false;
+
+            for (const gamepad of gamepads) {
+                if (!gamepad) continue;
+                const buttonPressed = gamepad.buttons.some(button => button.pressed);
+                const horizontalAxis = gamepad.axes[0] || 0;
+                const verticalAxis = gamepad.axes[1] || 0;
+                const directionalPressed = horizontalAxis > 0.65 || verticalAxis > 0.65;
+                if (buttonPressed || directionalPressed) {
+                    triggerPressed = true;
+                    break;
+                }
+            }
+
+            if (triggerPressed && !lastGamepadTriggerState
+                && isPrompterMode
+                && prompterContainer.classList.contains('active')) {
+                const now = Date.now();
+                if (now - lastRemoteAdvanceAt >= 350) {
+                    lastRemoteAdvanceAt = now;
+                    advanceToNextLine();
+                }
+            }
+
+            lastGamepadTriggerState = triggerPressed;
+            requestAnimationFrame(pollGamepadRemote);
+        }
+
+        function startGamepadRemoteSupport() {
+            if (gamepadPollingStarted || !navigator.getGamepads) return;
+            gamepadPollingStarted = true;
+            requestAnimationFrame(pollGamepadRemote);
+        }
+
+        window.addEventListener('gamepadconnected', startGamepadRemoteSupport);
+        startGamepadRemoteSupport();
 
         if ('mediaSession' in navigator && navigator.mediaSession.setActionHandler) {
             try {
