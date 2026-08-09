@@ -2,7 +2,7 @@
 <html lang="ko"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>iPrompter v1.73</title>
+    <title>iPrompter v1.78</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;900&display=swap');
 
@@ -261,6 +261,33 @@
             transition: transform 0.1s;
         }
 
+        .practice-mask-options {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-bottom: 0.65rem;
+            color: #d2d2d2;
+            font-size: 0.9rem;
+        }
+
+        .practice-mask-options .option-title {
+            color: #9f9f9f;
+            font-weight: 600;
+        }
+
+        .practice-mask-options label {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            cursor: pointer;
+        }
+
+        .practice-mask-options input {
+            width: 18px;
+            height: 18px;
+            accent-color: #ffd84d;
+        }
         .start-actions {
             display: flex;
             gap: 0.75rem;
@@ -695,7 +722,7 @@
                 display: flex;
                 display: grid;
                 grid-template-columns: minmax(0, 1fr) minmax(220px, 32vw);
-                grid-template-rows: auto 1fr auto;
+                grid-template-rows: auto 1fr auto auto;
                 gap: 0.65rem 1rem;
                 padding: 0.65rem 0.85rem;
                 padding: max(0.65rem, env(safe-area-inset-top)) max(0.85rem, env(safe-area-inset-right)) max(0.65rem, env(safe-area-inset-bottom)) max(0.85rem, env(safe-area-inset-left));
@@ -723,7 +750,7 @@
 
             #script-input {
                 grid-column: 1;
-                grid-row: 1 / 4;
+                grid-row: 1 / 5;
                 min-height: 0;
                 margin: 0;
                 padding: 1rem;
@@ -765,9 +792,17 @@
                 font-size: 0.72rem;
             }
 
-            .start-actions {
+            .practice-mask-options {
                 grid-column: 2;
                 grid-row: 3;
+                margin: 0;
+                gap: 0.4rem;
+                font-size: 0.76rem;
+            }
+
+            .start-actions {
+                grid-column: 2;
+                grid-row: 4;
             }
 
             .start-btn {
@@ -842,7 +877,7 @@
 </head>
 <body>
     <div id="setup-container">
-        <h1>iPrompter <span class="app-version">v1.73</span></h1>
+        <h1>iPrompter <span class="app-version">v1.78</span></h1>
         
                 <textarea id="script-input" placeholder="여기에 읽을 대본을 입력하세요...">Hello, everyone.
 My name is Tan Kim
@@ -921,7 +956,7 @@ Thank you for listening.</textarea>
                     <label>분</label>
                 </div>
                 <div class="time-input-group">
-                    <input type="number" id="seconds-input" min="0" max="59" value="16" readonly="">
+                    <input type="number" id="seconds-input" min="0" max="59" value="45" readonly="">
                     <label>초</label>
                 </div>
             </div>
@@ -936,9 +971,15 @@ Thank you for listening.</textarea>
             </div>
         </div>
 
+        <div class="practice-mask-options" aria-label="연습 원고 뒤쪽 가리기">
+            <span class="option-title">뒤에서 가리기</span>
+            <label><input type="checkbox" class="practice-mask-checkbox" value="30" onchange="selectPracticeMask(this)">30%</label>
+            <label><input type="checkbox" class="practice-mask-checkbox" value="50" onchange="selectPracticeMask(this)">50%</label>
+            <label><input type="checkbox" class="practice-mask-checkbox" value="70" onchange="selectPracticeMask(this)" checked="checked">70%</label>
+        </div>
         <div class="start-actions">
-            <button class="start-btn practice-start-btn" onclick="startPrompter(false)">연습 시작</button>
-            <button class="start-btn" onclick="startPrompter(true)">프롬프터 시작 v1.73</button>
+            <button class="start-btn practice-start-btn" onclick="startPractice()">연습 시작</button>
+            <button class="start-btn" onclick="startPrompter(true)">프롬프터 시작 v1.78</button>
         </div>
     </div>
 
@@ -1012,6 +1053,7 @@ Thank you for listening.</textarea>
         let isVerticalFlipped = false;
         let isPrompterMode = false;
         let importedJsonBaseName = 'prompter';
+        let practiceMaskPercent = 30;
         let jsonDirectoryHandle = null;
         let rememberedJsonDirectoryHandle = null;
         let currentJsonFileHandle = null;
@@ -1110,6 +1152,28 @@ Thank you for listening.</textarea>
                 .replace(/\s*```(?:\s*\[cite:\s*[^\]]+\])?\s*$/i, '');
         }
 
+        function setPracticeMaskPercent(percent) {
+            practiceMaskPercent = [30, 50, 70].indexOf(Number(percent)) !== -1 ? Number(percent) : 0;
+            document.querySelectorAll('.practice-mask-checkbox').forEach(checkbox => {
+                checkbox.checked = Number(checkbox.value) === practiceMaskPercent;
+                if (checkbox.checked) checkbox.setAttribute('checked', 'checked');
+                else checkbox.removeAttribute('checked');
+            });
+        }
+
+        function selectPracticeMask(checkbox) {
+            setPracticeMaskPercent(checkbox.checked ? Number(checkbox.value) : 0);
+        }
+
+        function maskPracticeText(text) {
+            if (!practiceMaskPercent) return text;
+            return text.split(/\r?\n/).map(line => {
+                const characters = Array.from(line);
+                const hiddenCount = Math.ceil(characters.length * practiceMaskPercent / 100);
+                const visibleCount = Math.max(0, characters.length - hiddenCount);
+                return characters.map((character, index) => index < visibleCount ? character : '_').join('');
+            }).join('\n');
+        }
         function applyPrompterSettings(settings) {
             if (!settings || typeof settings !== 'object') return;
             if (settings.wpm != null) wpmInput.value = settings.wpm;
@@ -1119,6 +1183,7 @@ Thank you for listening.</textarea>
             if (settings.textSizeLevel != null) textSizeLevel = Number(settings.textSizeLevel) || 2;
             isHorizontalFlipped = Boolean(settings.isHorizontalFlipped);
             isVerticalFlipped = Boolean(settings.isVerticalFlipped);
+            setPracticeMaskPercent(settings.practiceMaskPercent);
         }
 
         function getPrompterSettings() {
@@ -1129,7 +1194,8 @@ Thank you for listening.</textarea>
                 lineDelay: Number(lineDelayInput.value || 0),
                 textSizeLevel,
                 isHorizontalFlipped,
-                isVerticalFlipped
+                isVerticalFlipped,
+                practiceMaskPercent
             };
         }
 
@@ -1541,10 +1607,39 @@ Thank you for listening.</textarea>
         function formatPrompterLine(text) {
             if (!text || !text.trim()) return '&nbsp;';
             const trimmedText = text.trim();
+            if (text.includes('_')) return text;
             const endsSentence = /[.!?。？！…]["'’”)}\]]*$/.test(trimmedText);
             return endsSentence ? text : `${text} →`;
         }
 
+        function startPractice() {
+            const checkedMask = document.querySelector('.practice-mask-checkbox:checked')
+                || document.querySelector('.practice-mask-checkbox[value="30"]');
+            setPracticeMaskPercent(checkedMask ? Number(checkedMask.value) : 30);
+            startPrompter(false);
+        }
+        function togglePracticeLine(index) {
+            const lineData = linesData[index];
+            if (!lineData || lineData.isSpacer) return;
+
+            lineData.isRevealed = !lineData.isRevealed;
+            lineData.text = lineData.isRevealed ? lineData.originalText : lineData.maskedText;
+            const textSpan = document.querySelector(`#line-${index} .text-span`);
+            if (!textSpan) return;
+            const textNode = Array.from(textSpan.childNodes).find(node => node.nodeType === Node.TEXT_NODE);
+            if (textNode) textNode.textContent = formatPrompterLine(lineData.text);
+            rebuildLineProgressTracks();
+            setTimeout(refreshLayout, 0);
+        }
+
+        function handleLineTap(index, event) {
+            if (event) event.stopPropagation();
+            if (!isPrompterMode && practiceMaskPercent) {
+                togglePracticeLine(index);
+                return;
+            }
+            jumpToLine(index);
+        }
         function startPrompter(usePrompterMirror) {
             if (typeof usePrompterMirror === 'boolean') {
                 isPrompterMode = usePrompterMirror;
@@ -1553,14 +1648,20 @@ Thank you for listening.</textarea>
             textSizeLevel = 2;
             document.body.classList.toggle('prompter-mirror-mode', isPrompterMode);
 
-            const text = scriptInput.value.trim();
-            if (!text) return;
+            const sourceText = scriptInput.value.trim();
+            if (!sourceText) return;
+            if (!isPrompterMode) {
+                const checkedMask = document.querySelector('.practice-mask-checkbox:checked');
+                setPracticeMaskPercent(checkedMask ? Number(checkedMask.value) : 0);
+            }
+            const text = isPrompterMode ? sourceText : maskPracticeText(sourceText);
 
             setupContainer.classList.add('hidden');
             prompterContainer.classList.add('active');
             enterFullscreen();
 
-            const rawLines = text.split('\n');
+            const originalLines = sourceText.split('\\n');
+            const rawLines = text.split('\\n');
             const minutes = parseInt(minutesInput.value || 0);
             const seconds = parseInt(secondsInput.value || 0);
             const totalDurationMs = (minutes * 60 + seconds) * 1000;
@@ -1568,6 +1669,9 @@ Thank you for listening.</textarea>
             scrollLinesData = rawLines.map((line, index) => ({
                 index,
                 text: line,
+                originalText: originalLines[index] || '',
+                maskedText: line,
+                isRevealed: false,
                 characterCount: Math.max(1, Array.from(line).length)
             }));
             const totalCharacterCount = scrollLinesData.reduce(
@@ -1594,7 +1698,7 @@ Thank you for listening.</textarea>
             }
 
             textDisplay.innerHTML = linesData.map((data, index) => {
-                return `<div class="text-line" id="line-${index}" onclick="jumpToLine(${index})">
+                return `<div class="text-line" id="line-${index}" onclick="handleLineTap(${index}, event)">
                     <span class="text-span">${formatPrompterLine(data.text)}</span>
                 </div>`;
             }).join('');
@@ -1991,6 +2095,7 @@ Thank you for listening.</textarea>
         // 사용자가 수동으로 스크롤하면 자동 스크롤 일시 정지
         prompterContainer.addEventListener('touchstart', event => {
             if (event.target.closest('#controls-container')) return;
+            if (!isPrompterMode && practiceMaskPercent && event.target.closest('.text-line')) return;
             if (isPlaying) pause();
         }, { passive: true });
 
