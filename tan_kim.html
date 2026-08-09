@@ -2,7 +2,7 @@
 <html lang="ko"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>iPrompter v1.84</title>
+    <title>iPrompter v1.86</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;900&display=swap');
 
@@ -600,31 +600,6 @@
             background: rgba(255, 255, 255, 0.1);
         }
 
-        #next-line-btn {
-            border-radius: 12px;
-            background: #ffd84d;
-            border: 1px solid #ffe98f;
-            color: #171300;
-            gap: 0.3rem;
-            padding: 0.5rem 0.75rem;
-            width: auto;
-            font-size: 0.82rem;
-            font-weight: 800;
-            white-space: nowrap;
-        }
-
-        #next-line-btn:hover,
-        #next-line-btn:active {
-            background: #ffea8a;
-        }
-
-        body:not(.prompter-mirror-mode) #next-line-btn {
-            display: flex;
-        }
-
-        body.prompter-mirror-mode #next-line-btn {
-            display: none;
-        }
         #play-pause-btn {
             background: white;
             color: black;
@@ -881,7 +856,7 @@
 </head>
 <body>
     <div id="setup-container">
-        <h1>iPrompter <span class="app-version">v1.84</span></h1>
+        <h1>iPrompter <span class="app-version">v1.86</span></h1>
         
                 <textarea id="script-input" placeholder="여기에 읽을 대본을 입력하세요...">Hello, everyone.
 My name is Tan Kim
@@ -983,7 +958,7 @@ Thank you for listening.</textarea>
         </div>
         <div class="start-actions">
             <button class="start-btn practice-start-btn" onclick="startPractice()">연습 시작</button>
-            <button class="start-btn" onclick="startPrompter(true)">프롬프터 시작 v1.84</button>
+            <button class="start-btn" onclick="startPrompter(true)">프롬프터 시작 v1.86</button>
         </div>
     </div>
 
@@ -1012,10 +987,6 @@ Thank you for listening.</textarea>
             </button>
             
             <!-- 처음부터 다시 버튼 -->
-            <button class="control-btn" id="next-line-btn" onclick="advanceToNextLine()" title="다음 문장" aria-label="다음 문장">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
-                <span>다음 문장</span>
-            </button>
             <button class="control-btn" onclick="restart()" title="처음부터">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"></path></svg>
             </button>
@@ -1048,9 +1019,6 @@ Thank you for listening.</textarea>
         let lastGlowLineIndex = -1;
         let renderedActiveLineIndex = -1;
         let lastRenderTimestamp = 0;
-        let lastRemoteAdvanceAt = 0;
-        let gamepadPollingStarted = false;
-        let lastGamepadTriggerState = false;
         let responsiveLayoutFrame = null;
         const isLowPerformanceDevice = /Silk|Kindle|KF[A-Z]{2,}/i.test(navigator.userAgent)
             || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
@@ -1887,24 +1855,10 @@ Thank you for listening.</textarea>
                     }
                 }
 
-                const currentLine = scrollLinesData[scrollLineIndex];
-                const isLastScrollLine = scrollLineIndex === scrollLinesData.length - 1;
-                const nextLine = isLastScrollLine
-                    ? linesData[linesData.length - 1]
-                    : scrollLinesData[scrollLineIndex + 1];
                 const maxScroll = Math.max(0,
                     prompterContainer.scrollHeight - prompterContainer.clientHeight
                 );
-                const currentTarget = currentLine.offsetTop
-                    - (prompterContainer.clientHeight / 2)
-                    + (currentLine.height / 2);
-                const nextTarget = isLastScrollLine
-                    ? maxScroll
-                    : nextLine.offsetTop
-                        - (prompterContainer.clientHeight / 2)
-                        + (nextLine.height / 2);
-                const targetScroll = currentTarget
-                    + ((nextTarget - currentTarget) * scrollLineProgress);
+                const targetScroll = maxScroll * globalProgress;
                 prompterContainer.scrollTop = Math.max(0, Math.min(maxScroll, targetScroll));
 
                 if (scrollLineIndex !== renderedActiveLineIndex) {
@@ -1933,141 +1887,6 @@ Thank you for listening.</textarea>
             return pausedTime;
         }
 
-        function redistributeRemainingSchedule(nextIndex, elapsedMs) {
-            const totalDurationMs = (parseInt(minutesInput.value || 0) * 60
-                + parseInt(secondsInput.value || 0)) * 1000;
-            const boundedElapsed = Math.max(0, Math.min(totalDurationMs, elapsedMs));
-            const remainingDurationMs = Math.max(0, totalDurationMs - boundedElapsed);
-
-            scrollLinesData.forEach((line, index) => {
-                if (index < nextIndex) {
-                    line.startTime = 0;
-                    line.duration = 0;
-                }
-            });
-
-            const remainingLines = scrollLinesData.slice(nextIndex);
-            const remainingCharacters = remainingLines.reduce(
-                (total, line) => total + line.characterCount,
-                0
-            ) || 1;
-            let scheduleCursor = boundedElapsed;
-            remainingLines.forEach((line, remainingIndex) => {
-                line.startTime = scheduleCursor;
-                const isLastRemainingLine = remainingIndex === remainingLines.length - 1;
-                line.duration = isLastRemainingLine
-                    ? Math.max(0, totalDurationMs - scheduleCursor)
-                    : (line.characterCount / remainingCharacters) * remainingDurationMs;
-                scheduleCursor += line.duration;
-            });
-
-            return boundedElapsed;
-        }
-
-        function advanceToNextLine() {
-            if (!prompterContainer.classList.contains('active') || !scrollLinesData.length) return;
-
-            const currentIndex = Math.max(0, renderedActiveLineIndex);
-            const nextIndex = Math.min(currentIndex + 1, scrollLinesData.length - 1);
-            if (nextIndex === currentIndex) return;
-
-            const elapsedMs = redistributeRemainingSchedule(nextIndex, getCurrentElapsedMs());
-            pausedTime = elapsedMs;
-            if (isPlaying) {
-                startTime = performance.now();
-            }
-            const targetLine = scrollLinesData[nextIndex];
-            const targetScroll = targetLine.offsetTop
-                - (prompterContainer.clientHeight / 2)
-                + (targetLine.height / 2);
-            prompterContainer.scrollTop = Math.max(0, targetScroll);
-            updateActiveLine(nextIndex);
-            renderedActiveLineIndex = nextIndex;
-            updateTimerPosition(nextIndex);
-            const totalDurationMs = (parseInt(minutesInput.value || 0) * 60
-                + parseInt(secondsInput.value || 0)) * 1000;
-            progressBar.style.width = `${(1 - elapsedMs / Math.max(1, totalDurationMs)) * 100}%`;
-        }
-
-        function isShutterAdvanceKey(event) {
-            const supportedKeys = [
-                'Enter', ' ', 'Spacebar', 'ArrowRight', 'PageDown',
-                'MediaTrackNext', 'AudioVolumeUp', 'AudioVolumeDown',
-                'VolumeUp', 'VolumeDown', 'Camera'
-            ];
-            const supportedCodes = [
-                'Enter', 'NumpadEnter', 'Space', 'ArrowRight', 'PageDown',
-                'MediaTrackNext', 'AudioVolumeUp', 'AudioVolumeDown',
-                'VolumeUp', 'VolumeDown', 'Camera'
-            ];
-            const supportedKeyCodes = [13, 32, 34, 39, 174, 175, 176];
-            return supportedKeys.indexOf(event.key) !== -1
-                || supportedCodes.indexOf(event.code) !== -1
-                || supportedKeyCodes.indexOf(event.keyCode) !== -1;
-        }
-
-        function handleRemoteAdvance(event) {
-            if (!isPrompterMode
-                || !prompterContainer.classList.contains('active')
-                || !isShutterAdvanceKey(event)
-                || event.repeat) return;
-
-            const now = Date.now();
-            if (now - lastRemoteAdvanceAt < 350) return;
-            lastRemoteAdvanceAt = now;
-            event.preventDefault();
-            advanceToNextLine();
-        }
-
-        document.addEventListener('keydown', handleRemoteAdvance);
-        document.addEventListener('keyup', handleRemoteAdvance);
-        function pollGamepadRemote() {
-            const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
-            let triggerPressed = false;
-
-            for (const gamepad of gamepads) {
-                if (!gamepad) continue;
-                const buttonPressed = gamepad.buttons.some(button => button.pressed);
-                const horizontalAxis = gamepad.axes[0] || 0;
-                const verticalAxis = gamepad.axes[1] || 0;
-                const directionalPressed = horizontalAxis > 0.65 || verticalAxis > 0.65;
-                if (buttonPressed || directionalPressed) {
-                    triggerPressed = true;
-                    break;
-                }
-            }
-
-            if (triggerPressed && !lastGamepadTriggerState
-                && isPrompterMode
-                && prompterContainer.classList.contains('active')) {
-                const now = Date.now();
-                if (now - lastRemoteAdvanceAt >= 350) {
-                    lastRemoteAdvanceAt = now;
-                    advanceToNextLine();
-                }
-            }
-
-            lastGamepadTriggerState = triggerPressed;
-            requestAnimationFrame(pollGamepadRemote);
-        }
-
-        function startGamepadRemoteSupport() {
-            if (gamepadPollingStarted || !navigator.getGamepads) return;
-            gamepadPollingStarted = true;
-            requestAnimationFrame(pollGamepadRemote);
-        }
-
-        window.addEventListener('gamepadconnected', startGamepadRemoteSupport);
-        startGamepadRemoteSupport();
-
-        if ('mediaSession' in navigator && navigator.mediaSession.setActionHandler) {
-            try {
-                navigator.mediaSession.setActionHandler('nexttrack', advanceToNextLine);
-                navigator.mediaSession.setActionHandler('seekforward', advanceToNextLine);
-            } catch (error) {
-                console.log('Media remote actions are not supported:', error);
-            }
-        }
         function play() {
             if (!isPlaying) {
                 isPlaying = true;
