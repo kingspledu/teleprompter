@@ -2,7 +2,7 @@
 <html lang="ko"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>iPrompter v1.82</title>
+    <title>iPrompter v1.84</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;900&display=swap');
 
@@ -348,7 +348,7 @@
         }
 
         #text-display {
-            padding: 50vh 2rem; /* 시작과 끝을 화면 중앙에 맞추기 위한 여백 */
+            padding: 50vh 2rem 70vh; /* 시작과 끝을 화면 중앙에 맞추기 위한 여백 */
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -823,8 +823,8 @@
             }
 
             #text-display {
-                padding: 50vh 1.25rem;
-                padding: 50vh max(1.25rem, env(safe-area-inset-right)) 50vh max(1.25rem, env(safe-area-inset-left));
+                padding: 50vh 1.25rem 70vh;
+                padding: 50vh max(1.25rem, env(safe-area-inset-right)) 70vh max(1.25rem, env(safe-area-inset-left));
             }
 
             .text-line {
@@ -867,7 +867,7 @@
             .script-import { display: none; }
             .time-settings { padding: 0.5rem; }
             .preset-buttons { display: flex; }
-            #text-display { padding-top: 50vh; padding-bottom: 50vh; }
+            #text-display { padding-top: 50vh; padding-bottom: 70vh; }
             .text-line { font-size: 1.35rem; padding: 0.55rem 0; }
             #controls-container { opacity: 0.82; }
         }
@@ -881,7 +881,7 @@
 </head>
 <body>
     <div id="setup-container">
-        <h1>iPrompter <span class="app-version">v1.82</span></h1>
+        <h1>iPrompter <span class="app-version">v1.84</span></h1>
         
                 <textarea id="script-input" placeholder="여기에 읽을 대본을 입력하세요...">Hello, everyone.
 My name is Sol,
@@ -958,7 +958,7 @@ Thank you for listening to my story.</textarea>
         </div>
         <div class="start-actions">
             <button class="start-btn practice-start-btn" onclick="startPractice()">연습 시작</button>
-            <button class="start-btn" onclick="startPrompter(true)">프롬프터 시작 v1.82</button>
+            <button class="start-btn" onclick="startPrompter(true)">프롬프터 시작 v1.84</button>
         </div>
     </div>
 
@@ -980,8 +980,8 @@ Thank you for listening to my story.</textarea>
             <!-- 재생/일시정지 버튼 -->
             <button class="control-btn compact-label" onclick="changeTextSize(-1)" title="글자 작게" aria-label="글자 작게">A−</button>
             <button class="control-btn compact-label" onclick="changeTextSize(1)" title="글자 크게" aria-label="글자 크게">A＋</button>
-            <button class="control-btn compact-label" id="flip-horizontal-btn" onclick="toggleHorizontalFlip()" title="좌우 반전" aria-label="좌우 반전">좌우</button>
-            <button class="control-btn compact-label" id="flip-vertical-btn" onclick="toggleVerticalFlip()" title="상하 반전" aria-label="상하 반전">상하</button>
+            <button class="control-btn compact-label" id="flip-horizontal-btn" onclick="toggleHorizontalFlip()" title="좌우 반전" aria-label="좌우 반전" aria-pressed="false">좌우</button>
+            <button class="control-btn compact-label" id="flip-vertical-btn" onclick="toggleVerticalFlip()" title="상하 반전" aria-label="상하 반전" aria-pressed="false">상하</button>
             <button class="control-btn" id="play-pause-btn" onclick="pause()" title="일시정지" aria-label="일시정지">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="black"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>
             </button>
@@ -1026,6 +1026,7 @@ Thank you for listening to my story.</textarea>
         let lastRemoteAdvanceAt = 0;
         let gamepadPollingStarted = false;
         let lastGamepadTriggerState = false;
+        let responsiveLayoutFrame = null;
         const isLowPerformanceDevice = /Silk|Kindle|KF[A-Z]{2,}/i.test(navigator.userAgent)
             || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
         if (isLowPerformanceDevice) document.documentElement.classList.add('low-performance');
@@ -1866,17 +1867,19 @@ Thank you for listening to my story.</textarea>
                 const nextLine = isLastScrollLine
                     ? linesData[linesData.length - 1]
                     : scrollLinesData[scrollLineIndex + 1];
-                const currentTarget = currentLine.offsetTop
-                    - (prompterContainer.clientHeight / 2)
-                    + (currentLine.height / 2);
-                const nextTarget = nextLine.offsetTop
-                    - (prompterContainer.clientHeight / 2)
-                    + (nextLine.height / 2);
-                const targetScroll = currentTarget
-                    + ((nextTarget - currentTarget) * scrollLineProgress);
                 const maxScroll = Math.max(0,
                     prompterContainer.scrollHeight - prompterContainer.clientHeight
                 );
+                const currentTarget = currentLine.offsetTop
+                    - (prompterContainer.clientHeight / 2)
+                    + (currentLine.height / 2);
+                const nextTarget = isLastScrollLine
+                    ? maxScroll
+                    : nextLine.offsetTop
+                        - (prompterContainer.clientHeight / 2)
+                        + (nextLine.height / 2);
+                const targetScroll = currentTarget
+                    + ((nextTarget - currentTarget) * scrollLineProgress);
                 prompterContainer.scrollTop = Math.max(0, Math.min(maxScroll, targetScroll));
 
                 if (scrollLineIndex !== renderedActiveLineIndex) {
@@ -1889,6 +1892,7 @@ Thank you for listening to my story.</textarea>
                     isPlaying = false;
                     pausedTime = totalDurationMs;
                     startTime = null;
+                    prompterContainer.scrollTop = maxScroll;
                     updateTimerDisplay(totalDurationMs);
                     releaseWakeLock();
                     playPauseBtn.disabled = true;
@@ -2136,6 +2140,13 @@ Thank you for listening to my story.</textarea>
                 }
             });
             updateTimerPosition(activeLineIndex);
+            const totalDurationMs = (parseInt(minutesInput.value || 0) * 60
+                + parseInt(secondsInput.value || 0)) * 1000;
+            if (!isPlaying && totalDurationMs > 0 && pausedTime >= totalDurationMs) {
+                prompterContainer.scrollTop = Math.max(0,
+                    prompterContainer.scrollHeight - prompterContainer.clientHeight
+                );
+            }
         }
 
         function refreshResponsiveTextSize() {
@@ -2146,10 +2157,22 @@ Thank you for listening to my story.</textarea>
             applyPrompterView();
         }
 
-        window.addEventListener('resize', refreshResponsiveTextSize);
-        window.addEventListener('orientationchange', () => setTimeout(refreshResponsiveTextSize, 250));
+        function scheduleResponsiveLayoutRefresh() {
+            if (responsiveLayoutFrame) cancelAnimationFrame(responsiveLayoutFrame);
+            responsiveLayoutFrame = requestAnimationFrame(() => {
+                responsiveLayoutFrame = null;
+                refreshResponsiveTextSize();
+                requestAnimationFrame(refreshLayout);
+            });
+        }
+
+        window.addEventListener('resize', scheduleResponsiveLayoutRefresh);
+        window.addEventListener('orientationchange', () => setTimeout(scheduleResponsiveLayoutRefresh, 250));
         if (window.visualViewport) {
-            window.visualViewport.addEventListener('resize', refreshResponsiveTextSize);
+            window.visualViewport.addEventListener('resize', scheduleResponsiveLayoutRefresh);
+        }
+        if (window.ResizeObserver) {
+            new ResizeObserver(scheduleResponsiveLayoutRefresh).observe(prompterContainer);
         }
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible' && isPlaying) {
