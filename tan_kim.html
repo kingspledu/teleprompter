@@ -2,7 +2,7 @@
 <html lang="ko"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>iPrompter v1.78</title>
+    <title>iPrompter v1.79</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;900&display=swap');
 
@@ -370,6 +370,10 @@
             max-width: 800px;
         }
 
+        .text-line.masked-line {
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
         /* 현재 줄의 위, 아래 줄 (밝은 회색) */
         .text-line.adjacent {
             color: rgba(255, 255, 255, 0.6);
@@ -876,8 +880,8 @@
     </style>
 </head>
 <body>
-    <div id="setup-container" class="">
-        <h1>iPrompter <span class="app-version">v1.78</span></h1>
+    <div id="setup-container">
+        <h1>iPrompter <span class="app-version">v1.79</span></h1>
         
                 <textarea id="script-input" placeholder="여기에 읽을 대본을 입력하세요...">Hello, everyone.
 My name is Tan Kim
@@ -979,15 +983,15 @@ Thank you for listening.</textarea>
         </div>
         <div class="start-actions">
             <button class="start-btn practice-start-btn" onclick="startPractice()">연습 시작</button>
-            <button class="start-btn" onclick="startPrompter(true)">프롬프터 시작 v1.78</button>
+            <button class="start-btn" onclick="startPrompter(true)">프롬프터 시작 v1.79</button>
         </div>
     </div>
 
-    <div id="prompter-container" class="">
+    <div id="prompter-container">
         <!-- 상단 고정 타이머 -->
         <div id="center-guide-line" aria-hidden="true"></div>
-        <div id="edge-glow" class="right pulse" aria-hidden="true"></div>
-        <div id="fixed-timer" style="top: 86.4px;">00:02.49</div>
+        <div id="edge-glow" class="left" aria-hidden="true"></div>
+        <div id="fixed-timer">00:00.00</div>
         
         <div id="text-display"></div>
 
@@ -1001,9 +1005,9 @@ Thank you for listening.</textarea>
             <!-- 재생/일시정지 버튼 -->
             <button class="control-btn compact-label" onclick="changeTextSize(-1)" title="글자 작게" aria-label="글자 작게">A−</button>
             <button class="control-btn compact-label" onclick="changeTextSize(1)" title="글자 크게" aria-label="글자 크게">A＋</button>
-            <button class="control-btn compact-label" id="flip-horizontal-btn" onclick="toggleHorizontalFlip()" title="좌우 반전" aria-label="좌우 반전" aria-pressed="false">좌우</button>
-            <button class="control-btn compact-label" id="flip-vertical-btn" onclick="toggleVerticalFlip()" title="상하 반전" aria-label="상하 반전" aria-pressed="false">상하</button>
-            <button class="control-btn" id="play-pause-btn" onclick="pause()" title="일시정지" aria-label="일시정지" disabled="">
+            <button class="control-btn compact-label" id="flip-horizontal-btn" onclick="toggleHorizontalFlip()" title="좌우 반전" aria-label="좌우 반전">좌우</button>
+            <button class="control-btn compact-label" id="flip-vertical-btn" onclick="toggleVerticalFlip()" title="상하 반전" aria-label="상하 반전">상하</button>
+            <button class="control-btn" id="play-pause-btn" onclick="pause()" title="일시정지" aria-label="일시정지">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="black"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>
             </button>
             
@@ -1023,12 +1027,12 @@ Thank you for listening.</textarea>
         </div>
     </div>
 
-    <div id="countdown-overlay" class="">
-        <div id="countdown-number" class="animate">1</div>
+    <div id="countdown-overlay">
+        <div id="countdown-number">5</div>
     </div>
 
     <div id="progress-container">
-        <div id="progress-bar" style="width: 98.4857%;"></div>
+        <div id="progress-bar"></div>
     </div>
 
     <script>
@@ -1171,7 +1175,10 @@ Thank you for listening.</textarea>
                 const characters = Array.from(line);
                 const hiddenCount = Math.ceil(characters.length * practiceMaskPercent / 100);
                 const visibleCount = Math.max(0, characters.length - hiddenCount);
-                return characters.map((character, index) => index < visibleCount ? character : '_').join('');
+                return characters.map((character, index) => {
+                    if (index < visibleCount || /\s/.test(character)) return character;
+                    return '_';
+                }).join('');
             }).join('\n');
         }
         function applyPrompterSettings(settings) {
@@ -1626,6 +1633,7 @@ Thank you for listening.</textarea>
             lineData.text = lineData.isRevealed ? lineData.originalText : lineData.maskedText;
             const textSpan = document.querySelector(`#line-${index} .text-span`);
             if (!textSpan) return;
+            textSpan.closest('.text-line').classList.toggle('masked-line', !lineData.isRevealed);
             const textNode = Array.from(textSpan.childNodes).find(node => node.nodeType === Node.TEXT_NODE);
             if (textNode) textNode.textContent = formatPrompterLine(lineData.text);
             rebuildLineProgressTracks();
@@ -1698,7 +1706,8 @@ Thank you for listening.</textarea>
             }
 
             textDisplay.innerHTML = linesData.map((data, index) => {
-                return `<div class="text-line" id="line-${index}" onclick="handleLineTap(${index}, event)">
+                const maskedClass = data.text.includes('_') ? ' masked-line' : '';
+                return `<div class="text-line${maskedClass}" id="line-${index}" onclick="handleLineTap(${index}, event)">
                     <span class="text-span">${formatPrompterLine(data.text)}</span>
                 </div>`;
             }).join('');
