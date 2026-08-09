@@ -2,7 +2,7 @@
 <html lang="ko"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>iPrompter v1.71</title>
+    <title>iPrompter v1.73</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;900&display=swap');
 
@@ -842,7 +842,7 @@
 </head>
 <body>
     <div id="setup-container">
-        <h1>iPrompter <span class="app-version">v1.71</span></h1>
+        <h1>iPrompter <span class="app-version">v1.73</span></h1>
         
                 <textarea id="script-input" placeholder="여기에 읽을 대본을 입력하세요...">Hello, everyone.
 My name is Matthew.
@@ -927,7 +927,7 @@ to my story.</textarea>
 
         <div class="start-actions">
             <button class="start-btn practice-start-btn" onclick="startPrompter(false)">연습 시작</button>
-            <button class="start-btn" onclick="startPrompter(true)">프롬프터 시작 v1.71</button>
+            <button class="start-btn" onclick="startPrompter(true)">프롬프터 시작 v1.73</button>
         </div>
     </div>
 
@@ -1860,14 +1860,21 @@ to my story.</textarea>
         function isShutterAdvanceKey(event) {
             const supportedKeys = [
                 'Enter', ' ', 'Spacebar', 'ArrowRight', 'PageDown',
-                'MediaTrackNext', 'AudioVolumeUp', 'AudioVolumeDown', 'Camera'
+                'MediaTrackNext', 'AudioVolumeUp', 'AudioVolumeDown',
+                'VolumeUp', 'VolumeDown', 'Camera'
+            ];
+            const supportedCodes = [
+                'Enter', 'NumpadEnter', 'Space', 'ArrowRight', 'PageDown',
+                'MediaTrackNext', 'AudioVolumeUp', 'AudioVolumeDown',
+                'VolumeUp', 'VolumeDown', 'Camera'
             ];
             const supportedKeyCodes = [13, 32, 34, 39, 174, 175, 176];
             return supportedKeys.indexOf(event.key) !== -1
+                || supportedCodes.indexOf(event.code) !== -1
                 || supportedKeyCodes.indexOf(event.keyCode) !== -1;
         }
 
-        document.addEventListener('keydown', event => {
+        function handleRemoteAdvance(event) {
             if (!isPrompterMode
                 || !prompterContainer.classList.contains('active')
                 || !isShutterAdvanceKey(event)
@@ -1878,7 +1885,19 @@ to my story.</textarea>
             lastRemoteAdvanceAt = now;
             event.preventDefault();
             advanceToNextLine();
-        });
+        }
+
+        document.addEventListener('keydown', handleRemoteAdvance);
+        document.addEventListener('keyup', handleRemoteAdvance);
+
+        if ('mediaSession' in navigator && navigator.mediaSession.setActionHandler) {
+            try {
+                navigator.mediaSession.setActionHandler('nexttrack', advanceToNextLine);
+                navigator.mediaSession.setActionHandler('seekforward', advanceToNextLine);
+            } catch (error) {
+                console.log('Media remote actions are not supported:', error);
+            }
+        }
         function play() {
             if (!isPlaying) {
                 isPlaying = true;
@@ -1959,7 +1978,8 @@ to my story.</textarea>
         }
 
         // 사용자가 수동으로 스크롤하면 자동 스크롤 일시 정지
-        prompterContainer.addEventListener('touchstart', () => {
+        prompterContainer.addEventListener('touchstart', event => {
+            if (event.target.closest('#controls-container')) return;
             if (isPlaying) pause();
         }, { passive: true });
 
