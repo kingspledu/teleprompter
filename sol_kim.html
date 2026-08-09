@@ -2,7 +2,7 @@
 <html lang="ko"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>iPrompter v1.81</title>
+    <title>iPrompter v1.82</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;900&display=swap');
 
@@ -881,7 +881,7 @@
 </head>
 <body>
     <div id="setup-container">
-        <h1>iPrompter <span class="app-version">v1.81</span></h1>
+        <h1>iPrompter <span class="app-version">v1.82</span></h1>
         
                 <textarea id="script-input" placeholder="여기에 읽을 대본을 입력하세요...">Hello, everyone.
 My name is Sol,
@@ -958,7 +958,7 @@ Thank you for listening to my story.</textarea>
         </div>
         <div class="start-actions">
             <button class="start-btn practice-start-btn" onclick="startPractice()">연습 시작</button>
-            <button class="start-btn" onclick="startPrompter(true)">프롬프터 시작 v1.81</button>
+            <button class="start-btn" onclick="startPrompter(true)">프롬프터 시작 v1.82</button>
         </div>
     </div>
 
@@ -1862,7 +1862,10 @@ Thank you for listening to my story.</textarea>
                 }
 
                 const currentLine = scrollLinesData[scrollLineIndex];
-                const nextLine = scrollLinesData[Math.min(scrollLineIndex + 1, scrollLinesData.length - 1)];
+                const isLastScrollLine = scrollLineIndex === scrollLinesData.length - 1;
+                const nextLine = isLastScrollLine
+                    ? linesData[linesData.length - 1]
+                    : scrollLinesData[scrollLineIndex + 1];
                 const currentTarget = currentLine.offsetTop
                     - (prompterContainer.clientHeight / 2)
                     + (currentLine.height / 2);
