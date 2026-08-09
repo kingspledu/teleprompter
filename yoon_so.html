@@ -2,7 +2,7 @@
 <html lang="ko"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>iPrompter</title>
+    <title>iPrompter v1.82</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;900&display=swap');
 
@@ -43,6 +43,10 @@
         }
 
         h1 {
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            gap: 0.45rem;
             font-size: 2rem;
             font-weight: 700;
             margin-bottom: 1rem;
@@ -50,6 +54,15 @@
             background: linear-gradient(90deg, #fff, #aaa);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+        }
+
+        .app-version {
+            background: none;
+            color: #858585;
+            -webkit-text-fill-color: #858585;
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.03em;
         }
 
         textarea {
@@ -96,6 +109,38 @@
             background: rgba(255, 255, 255, 0.22);
         }
 
+        .json-save-btn,
+        .html-copy-btn,
+        .json-file-select {
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            padding: 0.6rem 0.9rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .json-save-btn,
+        .html-copy-btn {
+            cursor: pointer;
+        }
+
+        .json-file-select {
+            min-width: 220px;
+            color-scheme: dark;
+        }
+
+        .json-file-select option {
+            color: #111111;
+            background: #ffffff;
+        }
+
+        .json-save-btn:disabled,
+        .json-file-select:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
         .html-download-btn:disabled {
             opacity: 0.4;
             cursor: not-allowed;
@@ -110,6 +155,31 @@
             border-radius: 16px;
         }
 
+        .wpm-setting {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.55rem;
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .wpm-setting input {
+            width: 76px;
+            background: rgba(0, 0, 0, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.28);
+            color: #ffffff;
+            font-size: 1.1rem;
+            text-align: center;
+            padding: 0.48rem;
+            border-radius: 8px;
+            outline: none;
+        }
+
+        .time-input-group input[readonly] {
+            opacity: 0.78;
+            cursor: default;
+        }
         .time-inputs {
             display: flex;
             align-items: center;
@@ -135,6 +205,26 @@
             outline: none;
         }
 
+        .delay-setting {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.55rem;
+            color: #dddddd;
+            font-size: 0.92rem;
+        }
+
+        .delay-setting input {
+            width: 58px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            font-size: 1rem;
+            text-align: center;
+            padding: 0.42rem;
+            border-radius: 8px;
+            outline: none;
+        }
         .preset-buttons {
             display: flex;
             gap: 0.5rem;
@@ -171,6 +261,33 @@
             transition: transform 0.1s;
         }
 
+        .practice-mask-options {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-bottom: 0.65rem;
+            color: #d2d2d2;
+            font-size: 0.9rem;
+        }
+
+        .practice-mask-options .option-title {
+            color: #9f9f9f;
+            font-weight: 600;
+        }
+
+        .practice-mask-options label {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            cursor: pointer;
+        }
+
+        .practice-mask-options input {
+            width: 18px;
+            height: 18px;
+            accent-color: #ffd84d;
+        }
         .start-actions {
             display: flex;
             gap: 0.75rem;
@@ -253,6 +370,10 @@
             max-width: 800px;
         }
 
+        .text-line.masked-line {
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
         /* 현재 줄의 위, 아래 줄 (밝은 회색) */
         .text-line.adjacent {
             color: rgba(255, 255, 255, 0.6);
@@ -302,6 +423,16 @@
             will-change: transform;
         }
 
+        #center-guide-line {
+            position: fixed;
+            top: 50%;
+            left: max(12px, env(safe-area-inset-left));
+            right: max(12px, env(safe-area-inset-right));
+            height: 1px;
+            background: rgba(255, 255, 255, 0.38);
+            z-index: 18;
+            pointer-events: none;
+        }
         #edge-glow {
             position: fixed;
             top: 10%;
@@ -348,7 +479,7 @@
             left: 50%;
             transform: translateX(-50%);
             z-index: 20;
-            font-size: 0.88rem; /* 2.2rem의 40% */
+            font-size: 2.64rem; /* 2.2rem의 40% */
             color: #aaaaaa;
             font-variant-numeric: tabular-nums;
             font-weight: 600;
@@ -361,6 +492,20 @@
             pointer-events: none;
         }
 
+        .text-line,
+        .text-line.adjacent,
+        .text-line.active {
+            color: #ffffff;
+            filter: none;
+            transform: none;
+            text-shadow: none;
+            opacity: 1;
+        }
+
+        .line-progress-track,
+        .delay-setting {
+            display: none !important;
+        }
         #countdown-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -455,6 +600,31 @@
             background: rgba(255, 255, 255, 0.1);
         }
 
+        #next-line-btn {
+            border-radius: 12px;
+            background: #ffd84d;
+            border: 1px solid #ffe98f;
+            color: #171300;
+            gap: 0.3rem;
+            padding: 0.5rem 0.75rem;
+            width: auto;
+            font-size: 0.82rem;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        #next-line-btn:hover,
+        #next-line-btn:active {
+            background: #ffea8a;
+        }
+
+        body:not(.prompter-mirror-mode) #next-line-btn {
+            display: flex;
+        }
+
+        body.prompter-mirror-mode #next-line-btn {
+            display: none;
+        }
         #play-pause-btn {
             background: white;
             color: black;
@@ -464,6 +634,11 @@
 
         #play-pause-btn:hover, #play-pause-btn:active {
             background: #e0e0e0;
+        }
+
+        #play-pause-btn:disabled {
+            opacity: 0.45;
+            cursor: default;
         }
 
         .control-btn.compact-label {
@@ -516,12 +691,42 @@
             transform: translateX(-50%);
             transform-origin: center;
         }
+        html.low-performance .text-line,
+        html.low-performance .text-line.adjacent,
+        html.low-performance .text-line.active {
+            filter: none;
+            text-shadow: none;
+            transition: none;
+        }
+
+        html.low-performance #fixed-timer,
+        html.low-performance #controls-container {
+            -webkit-backdrop-filter: none;
+            backdrop-filter: none;
+            box-shadow: none;
+        }
+
+        html.low-performance #prompter-container::before,
+        html.low-performance #prompter-container::after { display: none; }
+
+        html.low-performance #edge-glow {
+            -webkit-filter: none;
+            filter: none;
+            animation: none;
+            transition: none;
+            opacity: 0.3;
+        }
+
+        html.low-performance .line-progress-fill {
+            box-shadow: none;
+            will-change: auto;
+        }
         @media (orientation: landscape) and (max-height: 600px) {
             #setup-container {
                 display: flex;
                 display: grid;
                 grid-template-columns: minmax(0, 1fr) minmax(220px, 32vw);
-                grid-template-rows: auto 1fr auto;
+                grid-template-rows: auto 1fr auto auto;
                 gap: 0.65rem 1rem;
                 padding: 0.65rem 0.85rem;
                 padding: max(0.65rem, env(safe-area-inset-top)) max(0.85rem, env(safe-area-inset-right)) max(0.65rem, env(safe-area-inset-bottom)) max(0.85rem, env(safe-area-inset-left));
@@ -538,7 +743,10 @@
             }
 
             .json-import-btn,
-        .html-download-btn {
+            .json-save-btn,
+            .html-download-btn,
+            .html-copy-btn,
+            .json-file-select {
                 width: 100%;
                 padding: 0.5rem;
                 font-size: 0.82rem;
@@ -546,7 +754,7 @@
 
             #script-input {
                 grid-column: 1;
-                grid-row: 1 / 4;
+                grid-row: 1 / 5;
                 min-height: 0;
                 margin: 0;
                 padding: 1rem;
@@ -588,9 +796,17 @@
                 font-size: 0.72rem;
             }
 
-            .start-actions {
+            .practice-mask-options {
                 grid-column: 2;
                 grid-row: 3;
+                margin: 0;
+                gap: 0.4rem;
+                font-size: 0.76rem;
+            }
+
+            .start-actions {
+                grid-column: 2;
+                grid-row: 4;
             }
 
             .start-btn {
@@ -625,7 +841,7 @@
             }
 
             #fixed-timer {
-                font-size: 0.75rem;
+                font-size: 2.25rem;
                 padding: 4px 10px;
             }
 
@@ -650,7 +866,7 @@
         @media (orientation: landscape) and (max-height: 450px) {
             .script-import { display: none; }
             .time-settings { padding: 0.5rem; }
-            .preset-buttons { display: none; }
+            .preset-buttons { display: flex; }
             #text-display { padding-top: 50vh; padding-bottom: 50vh; }
             .text-line { font-size: 1.35rem; padding: 0.55rem 0; }
             #controls-container { opacity: 0.82; }
@@ -660,16 +876,13 @@
             #setup-container { padding-left: 8vw; padding-right: 8vw; }
             .text-line { max-width: 900px; font-size: 2.5rem; }
         }
+
     </style>
 </head>
 <body>
     <div id="setup-container">
-        <h1>iPrompter</h1>
-        <div class="script-import">
-            <button type="button" class="json-import-btn" onclick="jsonFileInput.click()">JSON 원고 불러오기</button>
-            <input type="file" id="json-file-input" accept=".json,application/json" hidden="">
-            <button type="button" class="html-download-btn" id="html-download-btn" onclick="downloadConfiguredHtml()">설정 HTML 다운로드</button>
-        </div>
+        <h1>iPrompter <span class="app-version">v1.82</span></h1>
+        
                 <textarea id="script-input" placeholder="여기에 읽을 대본을 입력하세요...">Hello.
 My name is So-Yun.
 I am in the third grade
@@ -726,31 +939,47 @@ for everyone.
 Thank you for listening.</textarea>
         
         <div class="time-settings">
+            <div class="wpm-setting">
+                <label for="wpm-input">읽기 속도</label>
+                <input type="number" id="wpm-input" min="30" max="300" step="1" value="135">
+                <span>WPM</span>
+            </div>
             <div class="time-inputs">
                 <div class="time-input-group">
-                    <input type="number" id="minutes-input" min="0" max="60" value="1">
+                    <input type="number" id="minutes-input" min="0" max="60" value="1" readonly="">
                     <label>분</label>
                 </div>
                 <div class="time-input-group">
-                    <input type="number" id="seconds-input" min="0" max="59" value="45">
+                    <input type="number" id="seconds-input" min="0" max="59" value="18" readonly="">
                     <label>초</label>
                 </div>
             </div>
+            <div class="delay-setting">
+                <label for="line-delay-input">문장 뒤 멈춤</label>
+                <input type="number" id="line-delay-input" min="0" max="10" step="0.1" value="1">
+                <span>초</span>
+            </div>
             <div class="preset-buttons">
-                <button class="preset-btn" onclick="setPreset(0, 35)">기본 (35초)</button>
                 <button class="preset-btn" onclick="setPreset(1, 45)">3,4학년 (1분 45초)</button>
-                <button class="preset-btn" onclick="setPreset(2, 45)">5,6학년 (2분 45초)</button>
+                <button class="preset-btn" onclick="setPreset(2, 45)">5학년 이상 (2분 45초)</button>
             </div>
         </div>
 
+        <div class="practice-mask-options" aria-label="연습 원고 뒤쪽 가리기">
+            <span class="option-title">뒤에서 가리기</span>
+            <label><input type="checkbox" class="practice-mask-checkbox" value="30" onchange="selectPracticeMask(this)">30%</label>
+            <label><input type="checkbox" class="practice-mask-checkbox" value="50" onchange="selectPracticeMask(this)">50%</label>
+            <label><input type="checkbox" class="practice-mask-checkbox" value="70" onchange="selectPracticeMask(this)" checked="checked">70%</label>
+        </div>
         <div class="start-actions">
-            <button class="start-btn practice-start-btn" onclick="startPrompter(false)">연습 시작</button>
-            <button class="start-btn" onclick="startPrompter(true)">프롬프터 시작 v1.60</button>
+            <button class="start-btn practice-start-btn" onclick="startPractice()">연습 시작</button>
+            <button class="start-btn" onclick="startPrompter(true)">프롬프터 시작 v1.82</button>
         </div>
     </div>
 
     <div id="prompter-container">
         <!-- 상단 고정 타이머 -->
+        <div id="center-guide-line" aria-hidden="true"></div>
         <div id="edge-glow" class="left" aria-hidden="true"></div>
         <div id="fixed-timer">00:00.00</div>
         
@@ -766,13 +995,17 @@ Thank you for listening.</textarea>
             <!-- 재생/일시정지 버튼 -->
             <button class="control-btn compact-label" onclick="changeTextSize(-1)" title="글자 작게" aria-label="글자 작게">A−</button>
             <button class="control-btn compact-label" onclick="changeTextSize(1)" title="글자 크게" aria-label="글자 크게">A＋</button>
-            <button class="control-btn compact-label" id="flip-horizontal-btn" onclick="toggleHorizontalFlip()" title="좌우 반전" aria-label="좌우 반전" aria-pressed="false">좌우</button>
-            <button class="control-btn compact-label" id="flip-vertical-btn" onclick="toggleVerticalFlip()" title="상하 반전" aria-label="상하 반전" aria-pressed="false">상하</button>
-            <button class="control-btn" id="play-pause-btn" onclick="togglePlay()" title="재생/일시정지">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="black"><path d="M8 5v14l11-7z"></path></svg>
+            <button class="control-btn compact-label" id="flip-horizontal-btn" onclick="toggleHorizontalFlip()" title="좌우 반전" aria-label="좌우 반전">좌우</button>
+            <button class="control-btn compact-label" id="flip-vertical-btn" onclick="toggleVerticalFlip()" title="상하 반전" aria-label="상하 반전">상하</button>
+            <button class="control-btn" id="play-pause-btn" onclick="pause()" title="일시정지" aria-label="일시정지">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="black"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>
             </button>
             
             <!-- 처음부터 다시 버튼 -->
+            <button class="control-btn" id="next-line-btn" onclick="advanceToNextLine()" title="다음 문장" aria-label="다음 문장">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
+                <span>다음 문장</span>
+            </button>
             <button class="control-btn" onclick="restart()" title="처음부터">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"></path></svg>
             </button>
@@ -798,15 +1031,31 @@ Thank you for listening.</textarea>
         let startTime = null;
         let pausedTime = 0;
         let linesData = [];
+        let scrollLinesData = [];
         let isCountingDown = false;
         let wakeLock = null;
         let activeLineIndex = 0;
         let lastGlowLineIndex = -1;
+        let renderedActiveLineIndex = -1;
+        let lastRenderTimestamp = 0;
+        let lastRemoteAdvanceAt = 0;
+        let gamepadPollingStarted = false;
+        let lastGamepadTriggerState = false;
+        const isLowPerformanceDevice = /Silk|Kindle|KF[A-Z]{2,}/i.test(navigator.userAgent)
+            || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
+        if (isLowPerformanceDevice) document.documentElement.classList.add('low-performance');
         let textSizeLevel = 2;
         let isHorizontalFlipped = false;
         let isVerticalFlipped = false;
         let isPrompterMode = false;
-        let importedJsonBaseName = 'iPrompter';
+        let importedJsonBaseName = 'prompter';
+        let practiceMaskPercent = 0;
+        let jsonDirectoryHandle = null;
+        let rememberedJsonDirectoryHandle = null;
+        let currentJsonFileHandle = null;
+        let currentJsonData = null;
+        let currentReadingScriptEntry = null;
+        const jsonFolderFiles = new Map();
 
         if (!Array.prototype.flatMap) {
             Array.prototype.flatMap = function (callback, thisArg) {
@@ -835,9 +1084,16 @@ Thank you for listening.</textarea>
         const countdownNumber = document.getElementById('countdown-number');
         const fixedTimer = document.getElementById('fixed-timer');
         const edgeGlow = document.getElementById('edge-glow');
+        const wpmInput = document.getElementById('wpm-input');
         const minutesInput = document.getElementById('minutes-input');
         const secondsInput = document.getElementById('seconds-input');
+        const lineDelayInput = document.getElementById('line-delay-input');
         const jsonFileInput = document.getElementById('json-file-input');
+        const jsonFolderButton = document.getElementById('json-folder-btn');
+        const jsonFolderInput = document.getElementById('json-folder-input');
+        const jsonFileSelect = document.getElementById('json-file-select');
+        const jsonSaveButton = document.getElementById('json-save-btn');
+        const htmlCopyButton = document.getElementById('html-copy-btn');
         const htmlDownloadBtn = document.getElementById('html-download-btn');
         const controlsContainer = document.getElementById('controls-container');
         const flipHorizontalBtn = document.getElementById('flip-horizontal-btn');
@@ -863,22 +1119,234 @@ Thank you for listening.</textarea>
         }
 
         // 샘플 텍스트
-        function findReadingScript(data) {
+        function findReadingScriptEntry(data) {
             if (!data || typeof data !== 'object') return null;
 
             for (const [key, value] of Object.entries(data)) {
                 const normalizedKey = key.replace(/[\s_*]/g, '');
-                if (normalizedKey.includes('영문끊어읽기원고')) return value;
+                if (normalizedKey.includes('영문끊어읽기원고')) {
+                    return { owner: data, key, value };
+                }
 
-                const nestedResult = findReadingScript(value);
+                const nestedResult = findReadingScriptEntry(value);
                 if (nestedResult) return nestedResult;
             }
 
             return null;
         }
 
+        function findReadingScript(data) {
+            const entry = findReadingScriptEntry(data);
+            return entry ? entry.value : null;
+        }
 
+        function normalizeJsonText(rawJson) {
+            return rawJson
+                .replace(/^\uFEFF/, '')
+                .trim()
+                .replace(/^```(?:json)?\s*/i, '')
+                .replace(/\s*```(?:\s*\[cite:\s*[^\]]+\])?\s*$/i, '');
+        }
 
+        function setPracticeMaskPercent(percent) {
+            practiceMaskPercent = [30, 50, 70].indexOf(Number(percent)) !== -1 ? Number(percent) : 0;
+            document.querySelectorAll('.practice-mask-checkbox').forEach(checkbox => {
+                checkbox.checked = Number(checkbox.value) === practiceMaskPercent;
+                if (checkbox.checked) checkbox.setAttribute('checked', 'checked');
+                else checkbox.removeAttribute('checked');
+            });
+        }
+
+        function selectPracticeMask(checkbox) {
+            setPracticeMaskPercent(checkbox.checked ? Number(checkbox.value) : 0);
+        }
+
+        function maskPracticeText(text) {
+            if (!practiceMaskPercent) return text;
+            return text.split(/\r?\n/).map(line => {
+                const characters = Array.from(line);
+                const hiddenCount = Math.ceil(characters.length * practiceMaskPercent / 100);
+                const visibleCount = Math.max(0, characters.length - hiddenCount);
+                return characters.map((character, index) => {
+                    if (index < visibleCount || /\s/.test(character)) return character;
+                    return '_';
+                }).join('');
+            }).join('\n');
+        }
+        function applyPrompterSettings(settings) {
+            if (!settings || typeof settings !== 'object') return;
+            if (settings.wpm != null) wpmInput.value = settings.wpm;
+            if (settings.minutes != null) minutesInput.value = settings.minutes;
+            if (settings.seconds != null) secondsInput.value = settings.seconds;
+            if (settings.lineDelay != null) lineDelayInput.value = settings.lineDelay;
+            if (settings.textSizeLevel != null) textSizeLevel = Number(settings.textSizeLevel) || 2;
+            isHorizontalFlipped = Boolean(settings.isHorizontalFlipped);
+            isVerticalFlipped = Boolean(settings.isVerticalFlipped);
+            setPracticeMaskPercent(settings.practiceMaskPercent);
+        }
+
+        function getPrompterSettings() {
+            return {
+                wpm: Number(wpmInput.value || 135),
+                minutes: Number(minutesInput.value || 0),
+                seconds: Number(secondsInput.value || 0),
+                lineDelay: Number(lineDelayInput.value || 0),
+                textSizeLevel,
+                isHorizontalFlipped,
+                isVerticalFlipped,
+                practiceMaskPercent
+            };
+        }
+
+        function applyLoadedJson(data, fileName, fileHandle) {
+            const entry = findReadingScriptEntry(data);
+            if (!entry) {
+                throw new Error('"영문_끊어읽기_원고" 항목을 찾을 수 없습니다.');
+            }
+
+            const sourceLines = Array.isArray(entry.value) ? entry.value : [entry.value];
+            scriptInput.value = sourceLines
+                .flatMap(line => String(line).split(/\s*\/\s*/))
+                .map(line => line.trim())
+                .filter(Boolean)
+                .join('\n');
+
+            currentJsonData = data;
+            currentReadingScriptEntry = entry;
+            currentJsonFileHandle = fileHandle || null;
+            importedJsonBaseName = String(fileName || 'prompter').replace(/\.json$/i, '') || 'prompter';
+            applyPrompterSettings(data._prompter_settings);
+            if (!data._prompter_settings) updateDurationFromWpm();
+            if (jsonSaveButton) jsonSaveButton.disabled = false;
+            if (htmlDownloadBtn) htmlDownloadBtn.disabled = false;
+        }
+
+        async function loadJsonFile(file, fileHandle) {
+            const data = JSON.parse(normalizeJsonText(await file.text()));
+            applyLoadedJson(data, file.name, fileHandle);
+        }
+
+        function populateJsonFileSelect(fileNames) {
+            if (!jsonFileSelect) return;
+            const sortedNames = fileNames.slice().sort((a, b) => a.localeCompare(b, 'ko'));
+            jsonFileSelect.innerHTML = '<option value="">JSON 파일 선택</option>'
+                + sortedNames.map(name => `<option value="${name.replace(/&/g, '&amp;').replace(/"/g, '&quot;')}">${name}</option>`).join('');
+            jsonFileSelect.disabled = sortedNames.length === 0;
+        }
+
+        async function scanJsonDirectory(directoryHandle) {
+            jsonFolderFiles.clear();
+            for await (const entry of directoryHandle.values()) {
+                if (entry.kind === 'file' && /\.json$/i.test(entry.name)) {
+                    jsonFolderFiles.set(entry.name, entry);
+                }
+            }
+            populateJsonFileSelect(Array.from(jsonFolderFiles.keys()));
+            if (jsonFolderButton) jsonFolderButton.textContent = '현재 HTML 폴더 연결됨';
+        }
+
+        function openDirectoryHandleDatabase() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open('iPrompterDirectory', 1);
+                request.onupgradeneeded = () => request.result.createObjectStore('handles');
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function rememberJsonDirectoryHandle(directoryHandle) {
+            const database = await openDirectoryHandleDatabase();
+            const transaction = database.transaction('handles', 'readwrite');
+            transaction.objectStore('handles').put(directoryHandle, 'json-directory');
+        }
+
+        async function getRememberedJsonDirectoryHandle() {
+            const database = await openDirectoryHandleDatabase();
+            return new Promise((resolve, reject) => {
+                const request = database.transaction('handles').objectStore('handles').get('json-directory');
+                request.onsuccess = () => resolve(request.result || null);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function restoreJsonDirectory() {
+            if (!window.showDirectoryPicker || !window.indexedDB) return;
+            try {
+                rememberedJsonDirectoryHandle = await getRememberedJsonDirectoryHandle();
+                if (!rememberedJsonDirectoryHandle) return;
+                const permission = await rememberedJsonDirectoryHandle.queryPermission({ mode: 'readwrite' });
+                if (permission !== 'granted') return;
+                jsonDirectoryHandle = rememberedJsonDirectoryHandle;
+                await scanJsonDirectory(jsonDirectoryHandle);
+            } catch (error) {
+                console.log('Remembered JSON folder could not be restored:', error);
+            }
+        }
+
+        async function connectJsonFolder() {
+            if (!window.showDirectoryPicker) {
+                jsonFolderInput.click();
+                return;
+            }
+
+            try {
+                if (rememberedJsonDirectoryHandle) {
+                    const rememberedPermission = await rememberedJsonDirectoryHandle.requestPermission({ mode: 'readwrite' });
+                    if (rememberedPermission === 'granted') {
+                        jsonDirectoryHandle = rememberedJsonDirectoryHandle;
+                        await scanJsonDirectory(jsonDirectoryHandle);
+                        return;
+                    }
+                }
+                jsonDirectoryHandle = await window.showDirectoryPicker({
+                    id: 'prompter-json-folder',
+                    mode: 'readwrite',
+                    startIn: rememberedJsonDirectoryHandle || 'documents'
+                });
+                rememberedJsonDirectoryHandle = jsonDirectoryHandle;
+                await rememberJsonDirectoryHandle(jsonDirectoryHandle);
+                await scanJsonDirectory(jsonDirectoryHandle);
+            } catch (error) {
+                if (error.name !== 'AbortError') alert(`JSON 폴더를 열 수 없습니다.\n${error.message}`);
+            }
+        }
+
+        async function saveCurrentJson() {
+            if (!currentJsonData || !currentReadingScriptEntry) {
+                alert('먼저 JSON 파일을 선택해 주세요.');
+                return;
+            }
+
+            currentReadingScriptEntry.owner[currentReadingScriptEntry.key] = scriptInput.value
+                .split(/\r?\n/)
+                .map(line => line.trim())
+                .filter(Boolean);
+            currentJsonData._prompter_settings = getPrompterSettings();
+            const jsonText = JSON.stringify(currentJsonData, null, 2) + '\n';
+
+            if (currentJsonFileHandle && currentJsonFileHandle.createWritable) {
+                try {
+                    const permission = await currentJsonFileHandle.requestPermission({ mode: 'readwrite' });
+                    if (permission !== 'granted') throw new Error('파일 쓰기 권한이 필요합니다.');
+                    const writable = await currentJsonFileHandle.createWritable();
+                    await writable.write(jsonText);
+                    await writable.close();
+                    alert('JSON 파일에 저장했습니다.');
+                    return;
+                } catch (error) {
+                    alert(`원본 파일에 저장하지 못했습니다. 새 JSON 파일로 다운로드합니다.\n${error.message}`);
+                }
+            }
+
+            const blob = new Blob([jsonText], { type: 'application/json;charset=utf-8' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${importedJsonBaseName || 'prompter'}.json`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+        }
         function getConfiguredHtmlFileName() {
             const nameParts = importedJsonBaseName
                 .replace(/\.json$/i, '')
@@ -892,23 +1360,27 @@ Thank you for listening.</textarea>
                 .replace(/[^a-z0-9가-힣_]+/g, '');
             return `${personName || 'prompter'}.html`;
         }
-        function downloadConfiguredHtml() {
+        function buildConfiguredHtml() {
             const clone = document.documentElement.cloneNode(true);
             const clonedSetup = clone.querySelector('#setup-container');
             const clonedPrompter = clone.querySelector('#prompter-container');
             const clonedTextDisplay = clone.querySelector('#text-display');
             const clonedTextarea = clone.querySelector('#script-input');
+            const clonedWpm = clone.querySelector('#wpm-input');
             const clonedMinutes = clone.querySelector('#minutes-input');
             const clonedSeconds = clone.querySelector('#seconds-input');
-            const clonedDownloadButton = clone.querySelector('#html-download-btn');
+            const clonedLineDelay = clone.querySelector('#line-delay-input');
+            const clonedAuthoringTools = clone.querySelector('.authoring-only');
 
             clonedSetup.classList.remove('hidden');
             clonedPrompter.classList.remove('active', 'flip-horizontal', 'flip-vertical');
             clonedTextDisplay.innerHTML = '';
             clonedTextarea.textContent = scriptInput.value;
+            clonedWpm.setAttribute('value', wpmInput.value || '135');
             clonedMinutes.setAttribute('value', minutesInput.value || '0');
             clonedSeconds.setAttribute('value', secondsInput.value || '0');
-            clonedDownloadButton.removeAttribute('disabled');
+            clonedLineDelay.setAttribute('value', lineDelayInput.value || '0');
+            if (clonedAuthoringTools) clonedAuthoringTools.remove();
 
             let html = '<!DOCTYPE html>\n' + clone.outerHTML;
             const embeddedScript = `scriptInput.value = ${JSON.stringify(scriptInput.value)};`;
@@ -916,7 +1388,11 @@ Thank you for listening.</textarea>
             html = html.replace(/let textSizeLevel = -?\d+;/, `let textSizeLevel = ${textSizeLevel};`);
             html = html.replace('let isHorizontalFlipped = false;', `let isHorizontalFlipped = ${isHorizontalFlipped};`);
             html = html.replace('let isVerticalFlipped = false;', `let isVerticalFlipped = ${isVerticalFlipped};`);
+            return html;
+        }
 
+        function downloadConfiguredHtml() {
+            const html = buildConfiguredHtml();
             const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
             const fileName = getConfiguredHtmlFileName();
             if (navigator.msSaveOrOpenBlob) {
@@ -930,43 +1406,91 @@ Thank you for listening.</textarea>
             link.download = fileName;
             document.body.appendChild(link);
             link.click();
-            document.body.removeChild(link);
+            link.remove();
             setTimeout(() => URL.revokeObjectURL(url), 1000);
         }
-        jsonFileInput.addEventListener('change', async event => {
+
+        async function copyConfiguredHtml() {
+            const html = buildConfiguredHtml();
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(html);
+                } else {
+                    const copyArea = document.createElement('textarea');
+                    copyArea.value = html;
+                    copyArea.style.position = 'fixed';
+                    copyArea.style.opacity = '0';
+                    document.body.appendChild(copyArea);
+                    copyArea.select();
+                    document.execCommand('copy');
+                    copyArea.remove();
+                }
+                if (htmlCopyButton) {
+                    const originalText = htmlCopyButton.textContent;
+                    htmlCopyButton.textContent = '복사 완료';
+                    setTimeout(() => { htmlCopyButton.textContent = originalText; }, 1200);
+                }
+            } catch (error) {
+                alert(`HTML 코드를 복사하지 못했습니다.\n${error.message}`);
+            }
+        }
+
+        if (jsonFileInput) jsonFileInput.addEventListener('change', async event => {
             const file = event.target.files[0];
             if (!file) return;
-
             try {
-                const rawJson = await file.text();
-                const normalizedJson = rawJson
-                    .replace(/^\uFEFF/, '')
-                    .trim()
-                    .replace(/^```(?:json)?\s*/i, '')
-                    .replace(/\s*```(?:\s*\[cite:\s*[^\]]+\])?\s*$/i, '');
-                const data = JSON.parse(normalizedJson);
-                const readingScript = findReadingScript(data);
-                if (!readingScript) {
-                    throw new Error('"영문_끊어읽기_원고" 항목을 찾을 수 없습니다.');
-                }
-
-                const sourceLines = Array.isArray(readingScript) ? readingScript : [readingScript];
-                scriptInput.value = sourceLines
-                    .flatMap(line => String(line).split(/\s*\/\s*/))
-                    .map(line => line.trim())
-                    .filter(Boolean)
-                    .join('\n');
-                importedJsonBaseName = file.name.replace(/\.json$/i, '') || 'iPrompter';
-                htmlDownloadBtn.disabled = false;
+                await loadJsonFile(file, null);
             } catch (error) {
                 alert(`JSON 파일을 읽을 수 없습니다.\n${error.message}`);
             } finally {
                 event.target.value = '';
             }
         });
+
+        if (jsonFolderButton) jsonFolderButton.addEventListener('click', connectJsonFolder);
+        if (jsonFolderButton) restoreJsonDirectory();
+        if (jsonSaveButton) jsonSaveButton.addEventListener('click', saveCurrentJson);
+
+        if (jsonFolderInput) jsonFolderInput.addEventListener('change', event => {
+            jsonFolderFiles.clear();
+            Array.from(event.target.files || [])
+                .filter(file => /\.json$/i.test(file.name))
+                .forEach(file => jsonFolderFiles.set(file.name, file));
+            populateJsonFileSelect(Array.from(jsonFolderFiles.keys()));
+            if (jsonFolderButton) jsonFolderButton.textContent = '현재 HTML 폴더 연결됨';
+        });
+
+        if (jsonFileSelect) jsonFileSelect.addEventListener('change', async event => {
+            const selectedEntry = jsonFolderFiles.get(event.target.value);
+            if (!selectedEntry) return;
+            try {
+                const isFileHandle = typeof selectedEntry.getFile === 'function';
+                const file = isFileHandle ? await selectedEntry.getFile() : selectedEntry;
+                await loadJsonFile(file, isFileHandle ? selectedEntry : null);
+            } catch (error) {
+                alert(`선택한 JSON 파일을 읽을 수 없습니다.\n${error.message}`);
+            }
+        });
+
         scriptInput.value = "Hello.\nMy name is So-Yun.\nI am in the third grade\nat Jae-Reung Elementary School.\nMy dream\nstarted at the Louvre Museum.\nI saw real art,\nnot just art in books.\nI saw the statue\nof Nike.\nDid you know\nthe brand Nike\ngot its name and wings\nfrom her?\nThat was\nso cool to learn.\nI learned\nthree big facts.\nFirst,\nevery art piece\nhas a story.\nSecond,\nlooking at art\nfelt like time travel.\nThird,\nold artists\nput a lot of time and work\ninto one piece.\nNow,\nI have a clear dream.\nI want to be\na museum guide.\nI want to tell art stories\nto people\neasily and with fun.\nWhat do I do\nnow?\nI read books\nabout Greek myths,\nKorean history,\nand world history.\nLater,\nI will go to Italy\nto see more museums.\nI want to share art stories\neven with grandmas\nand grandpas.\nI want to help people\nlook closely\nand feel joy.\nI want to make\na new cultural experience\nfor everyone.\nThank you for listening.";
 
         // 프리셋 설정 함수
+
+        function countReadingWords(text) {
+            return (text.match(/[A-Za-z0-9]+(?:['’\-][A-Za-z0-9]+)*|[가-힣]+/g) || []).length;
+        }
+
+        function updateDurationFromWpm() {
+            const wordCount = countReadingWords(scriptInput.value);
+            const wpm = Math.max(1, parseFloat(wpmInput.value || 135));
+            const totalSeconds = wordCount > 0
+                ? Math.max(1, Math.ceil((wordCount / wpm) * 60))
+                : 0;
+            minutesInput.value = Math.floor(totalSeconds / 60);
+            secondsInput.value = totalSeconds % 60;
+        }
+        scriptInput.addEventListener('input', updateDurationFromWpm);
+        wpmInput.addEventListener('input', updateDurationFromWpm);
         function setPreset(min, sec) {
             minutesInput.value = min;
             secondsInput.value = sec;
@@ -987,20 +1511,8 @@ Thank you for listening.</textarea>
         }
 
         function updateTimerPosition(currentIndex) {
-            const activeLine = document.getElementById(`line-${currentIndex}`);
-            if (!activeLine) return;
-
             activeLineIndex = currentIndex;
-            if (isPrompterMode) {
-                fixedTimer.style.top = `${Math.max(16, window.innerHeight * 0.08)}px`;
-                return;
-            }
-
-            const lineRect = activeLine.getBoundingClientRect();
-            const timerHeight = fixedTimer.offsetHeight || 30;
-            const controlsTop = controlsContainer ? controlsContainer.getBoundingClientRect().top : window.innerHeight;
-            const top = Math.min(lineRect.bottom + 10, controlsTop - timerHeight - 8);
-            fixedTimer.style.top = `${Math.max(8, top)}px`;
+            fixedTimer.style.top = `${Math.max(16, window.innerHeight * 0.08)}px`;
         }
         function applyPrompterView() {
             const sizeMultiplier = Math.pow(1.15, textSizeLevel);
@@ -1082,66 +1594,50 @@ Thank you for listening.</textarea>
         }
 
         function updateActiveLine(currentIndex) {
+            activeLineIndex = currentIndex;
             if (currentIndex !== lastGlowLineIndex) {
                 lastGlowLineIndex = currentIndex;
                 edgeGlow.className = currentIndex % 2 === 0 ? 'left' : 'right';
                 void edgeGlow.offsetWidth;
                 edgeGlow.classList.add('pulse');
             }
-            document.querySelectorAll('.text-line').forEach((el, index) => {
-                // 클래스 초기화
-                el.className = 'text-line'; 
-                
-                if (index === currentIndex) {
-                    el.classList.add('active'); // 현재 줄 (흰색, 중앙)
-                } else if (index === currentIndex - 1 || index === currentIndex + 1) {
-                    el.classList.add('adjacent'); // 위아래 줄 (밝은 회색)
-                }
-                // 나머지는 기본 클래스(.text-line)만 유지되어 어둡고 블러처리 됨
-            });
-        }
-
-        function calculatePacingWeight(line) {
-            const trimmedLine = line.trim();
-            if (!trimmedLine) return 0.25;
-
-            const koreanCharacters = (trimmedLine.match(/[가-힣]/g) || []).length;
-            const englishWords = trimmedLine.match(/[A-Za-z]+(?:['’-][A-Za-z]+)*/g) || [];
-            const numberGroups = trimmedLine.match(/[0-9]+(?:[.,][0-9]+)*/g) || [];
-            const otherReadableCharacters = (trimmedLine
-                .replace(/[가-힣A-Za-z0-9\s.,;:!?'’"“”()\[\]{}\-]/g, '')
-                .match(/\S/g) || []).length;
-
-            const englishWeight = englishWords.reduce((total, word) => {
-                return total + 0.55 + (word.length * 0.08);
-            }, 0);
-            const numberWeight = numberGroups.reduce((total, number) => {
-                return total + 0.5 + (number.replace(/\D/g, '').length * 0.12);
-            }, 0);
-            const speakingWeight = (koreanCharacters * 0.34)
-                + englishWeight
-                + numberWeight
-                + (otherReadableCharacters * 0.28);
-
-            const commaPauses = (trimmedLine.match(/[,;]/g) || []).length * 0.22;
-            const phrasePauses = (trimmedLine.match(/[:()\[\]]/g) || []).length * 0.12;
-            const sentencePauses = (trimmedLine.match(/[.!?]/g) || []).length * 0.42;
-            const longSentenceBoost = 1 + Math.min(0.38, Math.max(0, speakingWeight - 5) * 0.025);
-
-            return Math.max(0.45,
-                (speakingWeight * longSentenceBoost)
-                + commaPauses
-                + phrasePauses
-                + sentencePauses
-            );
         }
 
         function formatPrompterLine(text) {
             if (!text || !text.trim()) return '&nbsp;';
-
             const trimmedText = text.trim();
+            if (text.includes('_')) return text;
             const endsSentence = /[.!?。？！…]["'’”)}\]]*$/.test(trimmedText);
             return endsSentence ? text : `${text} →`;
+        }
+
+        function startPractice() {
+            const checkedMask = document.querySelector('.practice-mask-checkbox:checked');
+            setPracticeMaskPercent(checkedMask ? Number(checkedMask.value) : 0);
+            startPrompter(false);
+        }
+        function togglePracticeLine(index) {
+            const lineData = linesData[index];
+            if (!lineData || lineData.isSpacer) return;
+
+            lineData.isRevealed = !lineData.isRevealed;
+            lineData.text = lineData.isRevealed ? lineData.originalText : lineData.maskedText;
+            const textSpan = document.querySelector(`#line-${index} .text-span`);
+            if (!textSpan) return;
+            textSpan.closest('.text-line').classList.toggle('masked-line', !lineData.isRevealed);
+            const textNode = Array.from(textSpan.childNodes).find(node => node.nodeType === Node.TEXT_NODE);
+            if (textNode) textNode.textContent = formatPrompterLine(lineData.text);
+            rebuildLineProgressTracks();
+            setTimeout(refreshLayout, 0);
+        }
+
+        function handleLineTap(index, event) {
+            if (event) event.stopPropagation();
+            if (!isPrompterMode && practiceMaskPercent) {
+                togglePracticeLine(index);
+                return;
+            }
+            jumpToLine(index);
         }
         function startPrompter(usePrompterMirror) {
             if (typeof usePrompterMirror === 'boolean') {
@@ -1150,61 +1646,75 @@ Thank you for listening.</textarea>
             }
             textSizeLevel = 2;
             document.body.classList.toggle('prompter-mirror-mode', isPrompterMode);
-            const text = scriptInput.value.trim();
-            if (!text) return;
 
-            // 화면 전환
+            const sourceText = scriptInput.value.trim();
+            if (!sourceText) return;
+            if (!isPrompterMode) {
+                const checkedMask = document.querySelector('.practice-mask-checkbox:checked');
+                setPracticeMaskPercent(checkedMask ? Number(checkedMask.value) : 0);
+            }
+            const text = isPrompterMode ? sourceText : maskPracticeText(sourceText);
+
             setupContainer.classList.add('hidden');
             prompterContainer.classList.add('active');
             enterFullscreen();
 
+            const originalLines = sourceText.split('\n');
             const rawLines = text.split('\n');
-            
-            // 글자수에 따른 동적 시간 분배 (긴 줄은 길게, 짧은 줄은 짧게)
-            let totalPacingWeight = 0;
-            linesData = rawLines.map((line, index) => {
-                const pacingWeight = calculatePacingWeight(line);
-                totalPacingWeight += pacingWeight;
-                return { index, text: line, pacingWeight };
-            });
-
             const minutes = parseInt(minutesInput.value || 0);
             const seconds = parseInt(secondsInput.value || 0);
             const totalDurationMs = (minutes * 60 + seconds) * 1000;
-            let currentTimeMs = 0;
 
-            // DOM 렌더링
-            textDisplay.innerHTML = linesData.map((data, index) => {
-                data.duration = (data.pacingWeight / totalPacingWeight) * totalDurationMs;
+            scrollLinesData = rawLines.map((line, index) => ({
+                index,
+                text: line,
+                originalText: originalLines[index] || '',
+                maskedText: line,
+                isRevealed: false,
+                characterCount: Math.max(1, Array.from(line).length)
+            }));
+            const totalCharacterCount = scrollLinesData.reduce(
+                (total, data) => total + data.characterCount,
+                0
+            ) || 1;
+            let currentTimeMs = 0;
+            scrollLinesData.forEach(data => {
+                data.duration = (data.characterCount / totalCharacterCount) * totalDurationMs;
                 data.startTime = currentTimeMs;
                 currentTimeMs += data.duration;
+            });
 
-                return `<div class="text-line" id="line-${index}" onclick="jumpToLine(${index})">
-                    <span class="text-span">
-                        ${formatPrompterLine(data.text)}
-                        <div class="line-progress-track">
-                            <div class="line-progress-fill" id="line-fill-${index}"></div>
-                        </div>
-                    </span>
+            linesData = scrollLinesData.slice();
+            for (let spacerIndex = 0; spacerIndex < 3; spacerIndex++) {
+                linesData.push({
+                    index: linesData.length,
+                    text: '',
+                    isSpacer: true,
+                    characterCount: 0,
+                    duration: 0,
+                    startTime: totalDurationMs
+                });
+            }
+
+            textDisplay.innerHTML = linesData.map((data, index) => {
+                const maskedClass = data.text.includes('_') ? ' masked-line' : '';
+                return `<div class="text-line${maskedClass}" id="line-${index}" onclick="handleLineTap(${index}, event)">
+                    <span class="text-span">${formatPrompterLine(data.text)}</span>
                 </div>`;
             }).join('');
 
             applyPrompterView();
 
-            // 초기화 후 카운트다운 시작
             setTimeout(() => {
-                rebuildLineProgressTracks();
                 linesData.forEach(data => {
-                    const el = document.getElementById(`line-${data.index}`);
-                    data.offsetTop = el.offsetTop;
-                    data.height = el.offsetHeight;
+                    const element = document.getElementById(`line-${data.index}`);
+                    data.offsetTop = element.offsetTop;
+                    data.height = element.offsetHeight;
                 });
-                
                 resetPrompterState();
                 startCountdown(5, () => { play(); });
             }, 300);
         }
-
 
         function rebuildLineProgressTracks() {
             document.querySelectorAll('.text-line').forEach(line => {
@@ -1275,11 +1785,17 @@ Thank you for listening.</textarea>
                     textSpan.appendChild(track);
                 });
                 textSpan.style.transform = previousInlineTransform;
+                const lineIndex = parseInt(line.id.replace('line-', ''), 10);
+                if (linesData[lineIndex]) {
+                    linesData[lineIndex].progressFills = Array.from(line.querySelectorAll('.line-progress-fill'));
+                }
             });
         }
 
         function updateLineProgress(lineIndex, progress) {
-            document.querySelectorAll(`#line-${lineIndex} .line-progress-fill`).forEach(fill => {
+            const lineData = linesData[lineIndex];
+            const progressFills = lineData && lineData.progressFills ? lineData.progressFills : [];
+            progressFills.forEach(fill => {
                 const segmentStart = parseFloat(fill.dataset.segmentStart || 0);
                 const segmentEnd = parseFloat(fill.dataset.segmentEnd || 1);
                 const segmentProgress = Math.max(0, Math.min(1,
@@ -1290,6 +1806,8 @@ Thank you for listening.</textarea>
         }
         function resetPrompterState() {
             lastGlowLineIndex = -1;
+            renderedActiveLineIndex = -1;
+            lastRenderTimestamp = 0;
             prompterContainer.scrollTop = 0;
             progressBar.style.width = '100%';
             updateActiveLine(0);
@@ -1327,67 +1845,223 @@ Thank you for listening.</textarea>
         }
         function step(timestamp) {
             if (!startTime) startTime = timestamp;
+            if (isLowPerformanceDevice && lastRenderTimestamp && timestamp - lastRenderTimestamp < 33) {
+                animationId = requestAnimationFrame(step);
+                return;
+            }
+            lastRenderTimestamp = timestamp;
             
             if (isPlaying) {
-                const elapsed = timestamp - startTime + pausedTime;
                 const totalDurationMs = (parseInt(minutesInput.value || 0) * 60 + parseInt(secondsInput.value || 0)) * 1000;
+                const elapsed = Math.min(totalDurationMs, timestamp - startTime + pausedTime);
                 
                 // 1. 전체 진행률 및 타이머
                 const globalProgress = Math.min(elapsed / totalDurationMs, 1);
                 progressBar.style.width = `${(1 - globalProgress) * 100}%`;
                 updateTimerDisplay(elapsed);
 
-                // 2. 현재 활성화된 줄 찾기
-                let currentLineIndex = 0;
-                let lineProgress = 0;
-
-                for (let i = 0; i < linesData.length; i++) {
-                    const line = linesData[i];
+                // 2. 띄어쓰기 포함 글자 수에 따라 줄별 스크롤 시간을 배분
+                let scrollLineIndex = 0;
+                let scrollLineProgress = 0;
+                for (let index = 0; index < scrollLinesData.length; index++) {
+                    const line = scrollLinesData[index];
                     if (elapsed >= line.startTime && elapsed < line.startTime + line.duration) {
-                        currentLineIndex = i;
-                        lineProgress = (elapsed - line.startTime) / line.duration;
+                        scrollLineIndex = index;
+                        scrollLineProgress = (elapsed - line.startTime) / Math.max(1, line.duration);
                         break;
                     }
-                    if (i === linesData.length - 1 && elapsed >= line.startTime) {
-                        currentLineIndex = i;
-                        lineProgress = 1;
+                    if (index === scrollLinesData.length - 1 && elapsed >= line.startTime) {
+                        scrollLineIndex = index;
+                        scrollLineProgress = 1;
                     }
                 }
 
-                // 3. 밑줄 진행바 실시간 축소 (1 -> 0)
-                updateLineProgress(currentLineIndex, lineProgress);
+                const currentLine = scrollLinesData[scrollLineIndex];
+                const isLastScrollLine = scrollLineIndex === scrollLinesData.length - 1;
+                const nextLine = isLastScrollLine
+                    ? linesData[linesData.length - 1]
+                    : scrollLinesData[scrollLineIndex + 1];
+                const currentTarget = currentLine.offsetTop
+                    - (prompterContainer.clientHeight / 2)
+                    + (currentLine.height / 2);
+                const nextTarget = nextLine.offsetTop
+                    - (prompterContainer.clientHeight / 2)
+                    + (nextLine.height / 2);
+                const targetScroll = currentTarget
+                    + ((nextTarget - currentTarget) * scrollLineProgress);
+                const maxScroll = Math.max(0,
+                    prompterContainer.scrollHeight - prompterContainer.clientHeight
+                );
+                prompterContainer.scrollTop = Math.max(0, Math.min(maxScroll, targetScroll));
 
-                // 4. 스크롤 위치 계산 (현재 줄을 화면 정중앙 50vh에 위치)
-                const currentLineData = linesData[currentLineIndex];
-                const currentLineElement = document.getElementById(`line-${currentLineIndex}`);
-                const containerRect = prompterContainer.getBoundingClientRect();
-                const currentRect = currentLineElement.getBoundingClientRect();
-                const currentCenter = currentRect.top + (currentRect.height / 2);
-                const viewportCenter = containerRect.top + (containerRect.height / 2);
-                const targetScroll = prompterContainer.scrollTop + currentCenter - viewportCenter;
-
-                prompterContainer.scrollTop = Math.max(0, targetScroll);
-                updateActiveLine(currentLineIndex);
-                updateTimerPosition(currentLineIndex);
-
+                if (scrollLineIndex !== renderedActiveLineIndex) {
+                    updateActiveLine(scrollLineIndex);
+                    renderedActiveLineIndex = scrollLineIndex;
+                }
                 if (elapsed < totalDurationMs) {
                     animationId = requestAnimationFrame(step);
                 } else {
                     isPlaying = false;
+                    pausedTime = totalDurationMs;
+                    startTime = null;
+                    updateTimerDisplay(totalDurationMs);
                     releaseWakeLock();
-                    centerActiveLine(currentLineIndex);
-                    playPauseBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="black"><path d="M8 5v14l11-7z"/></svg>';
+                    playPauseBtn.disabled = true;
                 }
             }
         }
 
+
+        function getCurrentElapsedMs() {
+            if (isPlaying && startTime !== null) {
+                return performance.now() - startTime + pausedTime;
+            }
+            return pausedTime;
+        }
+
+        function redistributeRemainingSchedule(nextIndex, elapsedMs) {
+            const totalDurationMs = (parseInt(minutesInput.value || 0) * 60
+                + parseInt(secondsInput.value || 0)) * 1000;
+            const boundedElapsed = Math.max(0, Math.min(totalDurationMs, elapsedMs));
+            const remainingDurationMs = Math.max(0, totalDurationMs - boundedElapsed);
+
+            scrollLinesData.forEach((line, index) => {
+                if (index < nextIndex) {
+                    line.startTime = 0;
+                    line.duration = 0;
+                }
+            });
+
+            const remainingLines = scrollLinesData.slice(nextIndex);
+            const remainingCharacters = remainingLines.reduce(
+                (total, line) => total + line.characterCount,
+                0
+            ) || 1;
+            let scheduleCursor = boundedElapsed;
+            remainingLines.forEach((line, remainingIndex) => {
+                line.startTime = scheduleCursor;
+                const isLastRemainingLine = remainingIndex === remainingLines.length - 1;
+                line.duration = isLastRemainingLine
+                    ? Math.max(0, totalDurationMs - scheduleCursor)
+                    : (line.characterCount / remainingCharacters) * remainingDurationMs;
+                scheduleCursor += line.duration;
+            });
+
+            return boundedElapsed;
+        }
+
+        function advanceToNextLine() {
+            if (!prompterContainer.classList.contains('active') || !scrollLinesData.length) return;
+
+            const currentIndex = Math.max(0, renderedActiveLineIndex);
+            const nextIndex = Math.min(currentIndex + 1, scrollLinesData.length - 1);
+            if (nextIndex === currentIndex) return;
+
+            const elapsedMs = redistributeRemainingSchedule(nextIndex, getCurrentElapsedMs());
+            pausedTime = elapsedMs;
+            if (isPlaying) {
+                startTime = performance.now();
+            }
+            const targetLine = scrollLinesData[nextIndex];
+            const targetScroll = targetLine.offsetTop
+                - (prompterContainer.clientHeight / 2)
+                + (targetLine.height / 2);
+            prompterContainer.scrollTop = Math.max(0, targetScroll);
+            updateActiveLine(nextIndex);
+            renderedActiveLineIndex = nextIndex;
+            updateTimerPosition(nextIndex);
+            const totalDurationMs = (parseInt(minutesInput.value || 0) * 60
+                + parseInt(secondsInput.value || 0)) * 1000;
+            progressBar.style.width = `${(1 - elapsedMs / Math.max(1, totalDurationMs)) * 100}%`;
+        }
+
+        function isShutterAdvanceKey(event) {
+            const supportedKeys = [
+                'Enter', ' ', 'Spacebar', 'ArrowRight', 'PageDown',
+                'MediaTrackNext', 'AudioVolumeUp', 'AudioVolumeDown',
+                'VolumeUp', 'VolumeDown', 'Camera'
+            ];
+            const supportedCodes = [
+                'Enter', 'NumpadEnter', 'Space', 'ArrowRight', 'PageDown',
+                'MediaTrackNext', 'AudioVolumeUp', 'AudioVolumeDown',
+                'VolumeUp', 'VolumeDown', 'Camera'
+            ];
+            const supportedKeyCodes = [13, 32, 34, 39, 174, 175, 176];
+            return supportedKeys.indexOf(event.key) !== -1
+                || supportedCodes.indexOf(event.code) !== -1
+                || supportedKeyCodes.indexOf(event.keyCode) !== -1;
+        }
+
+        function handleRemoteAdvance(event) {
+            if (!isPrompterMode
+                || !prompterContainer.classList.contains('active')
+                || !isShutterAdvanceKey(event)
+                || event.repeat) return;
+
+            const now = Date.now();
+            if (now - lastRemoteAdvanceAt < 350) return;
+            lastRemoteAdvanceAt = now;
+            event.preventDefault();
+            advanceToNextLine();
+        }
+
+        document.addEventListener('keydown', handleRemoteAdvance);
+        document.addEventListener('keyup', handleRemoteAdvance);
+        function pollGamepadRemote() {
+            const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+            let triggerPressed = false;
+
+            for (const gamepad of gamepads) {
+                if (!gamepad) continue;
+                const buttonPressed = gamepad.buttons.some(button => button.pressed);
+                const horizontalAxis = gamepad.axes[0] || 0;
+                const verticalAxis = gamepad.axes[1] || 0;
+                const directionalPressed = horizontalAxis > 0.65 || verticalAxis > 0.65;
+                if (buttonPressed || directionalPressed) {
+                    triggerPressed = true;
+                    break;
+                }
+            }
+
+            if (triggerPressed && !lastGamepadTriggerState
+                && isPrompterMode
+                && prompterContainer.classList.contains('active')) {
+                const now = Date.now();
+                if (now - lastRemoteAdvanceAt >= 350) {
+                    lastRemoteAdvanceAt = now;
+                    advanceToNextLine();
+                }
+            }
+
+            lastGamepadTriggerState = triggerPressed;
+            requestAnimationFrame(pollGamepadRemote);
+        }
+
+        function startGamepadRemoteSupport() {
+            if (gamepadPollingStarted || !navigator.getGamepads) return;
+            gamepadPollingStarted = true;
+            requestAnimationFrame(pollGamepadRemote);
+        }
+
+        window.addEventListener('gamepadconnected', startGamepadRemoteSupport);
+        startGamepadRemoteSupport();
+
+        if ('mediaSession' in navigator && navigator.mediaSession.setActionHandler) {
+            try {
+                navigator.mediaSession.setActionHandler('nexttrack', advanceToNextLine);
+                navigator.mediaSession.setActionHandler('seekforward', advanceToNextLine);
+            } catch (error) {
+                console.log('Media remote actions are not supported:', error);
+            }
+        }
         function play() {
             if (!isPlaying) {
                 isPlaying = true;
+                playPauseBtn.disabled = false;
                 requestWakeLock();
-                startTime = null; // step에서 재할당
+                startTime = null;
+                lastRenderTimestamp = 0;
                 animationId = requestAnimationFrame(step);
-                playPauseBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="black"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
             }
         }
 
@@ -1408,24 +2082,17 @@ Thank you for listening.</textarea>
             updateTimerPosition(lineIndex);
         }
         function pause() {
-            if (isPlaying) {
-                isPlaying = false;
-                releaseWakeLock();
-                cancelAnimationFrame(animationId);
-                if (startTime) {
-                    pausedTime += performance.now() - startTime;
-                }
-                centerActiveLine();
-                playPauseBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="black"><path d="M8 5v14l11-7z"/></svg>';
-            }
-        }
+            if (!isPlaying) return;
 
-        function togglePlay() {
-            if (isPlaying) {
-                pause();
-            } else {
-                startCountdown(3, () => { play(); }); // 일시정지 후 재생시는 3초 카운트
-            }
+            const elapsedAtPause = startTime !== null
+                ? performance.now() - startTime + pausedTime
+                : pausedTime;
+            isPlaying = false;
+            cancelAnimationFrame(animationId);
+            pausedTime = elapsedAtPause;
+            startTime = null;
+            playPauseBtn.disabled = true;
+            releaseWakeLock();
         }
 
         function restart() {
@@ -1451,23 +2118,26 @@ Thank you for listening.</textarea>
         function jumpToLine(index) {
             pause();
             const targetLine = linesData[index];
-            pausedTime = targetLine.startTime;
-            
-            // 시각적 업데이트 강제 실행
-            centerActiveLine(index);
-            updateActiveLine(index);
             const totalMs = (parseInt(minutesInput.value || 0) * 60 + parseInt(secondsInput.value || 0)) * 1000;
+            const maxScroll = Math.max(1,
+                prompterContainer.scrollHeight - prompterContainer.clientHeight
+            );
+            const targetScroll = Math.max(0,
+                targetLine.offsetTop - (prompterContainer.clientHeight / 2) + (targetLine.height / 2)
+            );
+            prompterContainer.scrollTop = targetScroll;
+            pausedTime = Math.min(totalMs, (targetScroll / maxScroll) * totalMs);
+            updateActiveLine(index);
+            renderedActiveLineIndex = index;
             updateTimerDisplay(pausedTime);
-            updateTimerPosition(index);
             progressBar.style.width = `${(1 - pausedTime / totalMs) * 100}%`;
         }
 
         // 사용자가 수동으로 스크롤하면 자동 스크롤 일시 정지
-        prompterContainer.addEventListener('touchstart', () => {
+        prompterContainer.addEventListener('touchstart', event => {
+            if (event.target.closest('#controls-container')) return;
+            if (!isPrompterMode && practiceMaskPercent && event.target.closest('.text-line')) return;
             if (isPlaying) pause();
-        }, { passive: true });
-        prompterContainer.addEventListener('touchend', () => {
-            if (!isPlaying) setTimeout(() => centerActiveLine(), 80);
         }, { passive: true });
 
         function refreshLayout() {
@@ -1502,5 +2172,6 @@ Thank you for listening.</textarea>
             }
         });
     </script>
+
 
 </body></html>
