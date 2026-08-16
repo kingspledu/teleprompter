@@ -854,8 +854,8 @@
 
     </style>
 </head>
-<body>
-    <div id="setup-container">
+<body class="">
+    <div id="setup-container" class="">
         <h1>iPrompter <span class="app-version">v1.86</span></h1>
         
                 <textarea id="script-input" placeholder="여기에 읽을 대본을 입력하세요...">Hello.
@@ -952,11 +952,11 @@ for listening to my story.</textarea>
         </div>
     </div>
 
-    <div id="prompter-container">
+    <div id="prompter-container" class="">
         <!-- 상단 고정 타이머 -->
         <div id="center-guide-line" aria-hidden="true"></div>
-        <div id="edge-glow" class="left" aria-hidden="true"></div>
-        <div id="fixed-timer">00:00.00</div>
+        <div id="edge-glow" class="left pulse" aria-hidden="true"></div>
+        <div id="fixed-timer" style="top: 86.4px;">00:00.43</div>
         
         <div id="text-display"></div>
 
@@ -971,8 +971,8 @@ for listening to my story.</textarea>
             <button class="control-btn compact-label" onclick="changeTextSize(-1)" title="글자 작게" aria-label="글자 작게">A−</button>
             <button class="control-btn compact-label" onclick="changeTextSize(1)" title="글자 크게" aria-label="글자 크게">A＋</button>
             <button class="control-btn compact-label" id="flip-horizontal-btn" onclick="toggleHorizontalFlip()" title="좌우 반전" aria-label="좌우 반전" aria-pressed="false">좌우</button>
-            <button class="control-btn compact-label" id="flip-vertical-btn" onclick="toggleVerticalFlip()" title="상하 반전" aria-label="상하 반전" aria-pressed="false">상하</button>
-            <button class="control-btn" id="play-pause-btn" onclick="pause()" title="일시정지" aria-label="일시정지">
+            <button class="control-btn compact-label is-active" id="flip-vertical-btn" onclick="toggleVerticalFlip()" title="상하 반전" aria-label="상하 반전" aria-pressed="true">상하</button>
+            <button class="control-btn" id="play-pause-btn" onclick="pause()" title="일시정지" aria-label="일시정지" disabled="">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="black"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>
             </button>
             
@@ -988,12 +988,12 @@ for listening to my story.</textarea>
         </div>
     </div>
 
-    <div id="countdown-overlay">
-        <div id="countdown-number">5</div>
+    <div id="countdown-overlay" class="">
+        <div id="countdown-number" class="animate">1</div>
     </div>
 
     <div id="progress-container">
-        <div id="progress-bar"></div>
+        <div id="progress-bar" style="width: 99.5874%;"></div>
     </div>
 
     <script>
@@ -1015,7 +1015,7 @@ for listening to my story.</textarea>
         if (isLowPerformanceDevice) document.documentElement.classList.add('low-performance');
         let textSizeLevel = 2;
         let isHorizontalFlipped = false;
-        let isVerticalFlipped = false;
+        let isVerticalFlipped = true;
         let isPrompterMode = false;
         let importedJsonBaseName = 'prompter';
         let practiceMaskPercent = 0;
