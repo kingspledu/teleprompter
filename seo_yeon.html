@@ -854,8 +854,8 @@
 
     </style>
 </head>
-<body class="">
-    <div id="setup-container" class="">
+<body>
+    <div id="setup-container">
         <h1>iPrompter <span class="app-version">v1.86</span></h1>
         
                 <textarea id="script-input" placeholder="여기에 읽을 대본을 입력하세요...">Hello
@@ -896,7 +896,7 @@ I take steps to reach this goal.
 I practice a bright smile everyday.
 I practice hard singing and dancing.
 And I study English hard
-to talk with fans out wide.
+to talk with fans.
 Music has no walls
 or borders.
 It can join all lands.
@@ -918,7 +918,7 @@ Thank you.</textarea>
                     <label>분</label>
                 </div>
                 <div class="time-input-group">
-                    <input type="number" id="seconds-input" min="0" max="59" value="45" readonly="">
+                    <input type="number" id="seconds-input" min="0" max="59" value="18" readonly="">
                     <label>초</label>
                 </div>
             </div>
@@ -945,11 +945,11 @@ Thank you.</textarea>
         </div>
     </div>
 
-    <div id="prompter-container" class="">
+    <div id="prompter-container">
         <!-- 상단 고정 타이머 -->
         <div id="center-guide-line" aria-hidden="true"></div>
-        <div id="edge-glow" class="left pulse" aria-hidden="true"></div>
-        <div id="fixed-timer" style="top: 86.4px;">00:00.48</div>
+        <div id="edge-glow" class="left" aria-hidden="true"></div>
+        <div id="fixed-timer">00:00.00</div>
         
         <div id="text-display"></div>
 
@@ -964,8 +964,8 @@ Thank you.</textarea>
             <button class="control-btn compact-label" onclick="changeTextSize(-1)" title="글자 작게" aria-label="글자 작게">A−</button>
             <button class="control-btn compact-label" onclick="changeTextSize(1)" title="글자 크게" aria-label="글자 크게">A＋</button>
             <button class="control-btn compact-label" id="flip-horizontal-btn" onclick="toggleHorizontalFlip()" title="좌우 반전" aria-label="좌우 반전" aria-pressed="false">좌우</button>
-            <button class="control-btn compact-label is-active" id="flip-vertical-btn" onclick="toggleVerticalFlip()" title="상하 반전" aria-label="상하 반전" aria-pressed="true">상하</button>
-            <button class="control-btn" id="play-pause-btn" onclick="pause()" title="일시정지" aria-label="일시정지" disabled="">
+            <button class="control-btn compact-label" id="flip-vertical-btn" onclick="toggleVerticalFlip()" title="상하 반전" aria-label="상하 반전" aria-pressed="false">상하</button>
+            <button class="control-btn" id="play-pause-btn" onclick="pause()" title="일시정지" aria-label="일시정지">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="black"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>
             </button>
             
@@ -981,12 +981,12 @@ Thank you.</textarea>
         </div>
     </div>
 
-    <div id="countdown-overlay" class="">
-        <div id="countdown-number" class="animate">1</div>
+    <div id="countdown-overlay">
+        <div id="countdown-number">5</div>
     </div>
 
     <div id="progress-container">
-        <div id="progress-bar" style="width: 99.5397%;"></div>
+        <div id="progress-bar"></div>
     </div>
 
     <script>
@@ -1008,7 +1008,7 @@ Thank you.</textarea>
         if (isLowPerformanceDevice) document.documentElement.classList.add('low-performance');
         let textSizeLevel = 2;
         let isHorizontalFlipped = false;
-        let isVerticalFlipped = true;
+        let isVerticalFlipped = false;
         let isPrompterMode = false;
         let importedJsonBaseName = 'prompter';
         let practiceMaskPercent = 0;
@@ -1434,7 +1434,7 @@ Thank you.</textarea>
             }
         });
 
-        scriptInput.value = "Hello\nfriends.\nMy name\nis Seo-Yeon Park.\nI am\nin the third grade.\nHave you felt a spark\nin your heart?\nI felt that spark\non a clear day.\nI saw the group IVE\non TV.\nThey sang their song\n\"I AM\".\nThey looked so bright and bold\non stage.\nAt that moment,\nI wanted to be like them.\nThat sight taught me\nthree key truths.\nFirst,\nmusic and dance connect our hearts.\nSecond,\na fine stage takes hard work\nbehind it.\nThird,\nwarm songs give true courage\nto people.\nSo, a clear dream\ngrew in me.\nI want to be a singer\nbecause I want to connect our heart\nand share happiness.\nNow,\nI take steps to reach this goal.\nI practice a bright smile everyday.\nI practice hard singing and dancing.\nAnd I study English hard\nto talk with fans out wide.\nMusic has no walls\nor borders.\nIt can join all lands.\nMy song will tell you,\n\"Believe in yourself.\"\nI want to be a bridge\nand share Kpop with the world.\nThank you.";
+        scriptInput.value = "Hello\nfriends.\nMy name\nis Seo-Yeon Park.\nI am\nin the third grade.\nHave you felt a spark\nin your heart?\nI felt that spark\non a clear day.\nI saw the group IVE\non TV.\nThey sang their song\n\"I AM\".\nThey looked so bright and bold\non stage.\nAt that moment,\nI wanted to be like them.\nThat sight taught me\nthree key truths.\nFirst,\nmusic and dance connect our hearts.\nSecond,\na fine stage takes hard work\nbehind it.\nThird,\nwarm songs give true courage\nto people.\nSo, a clear dream\ngrew in me.\nI want to be a singer\nbecause I want to connect our heart\nand share happiness.\nNow,\nI take steps to reach this goal.\nI practice a bright smile everyday.\nI practice hard singing and dancing.\nAnd I study English hard\nto talk with fans.\nMusic has no walls\nor borders.\nIt can join all lands.\nMy song will tell you,\n\"Believe in yourself.\"\nI want to be a bridge\nand share Kpop with the world.\nThank you.";
 
         // 프리셋 설정 함수
 
