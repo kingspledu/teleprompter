@@ -2,7 +2,7 @@
 <html lang="ko"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>iPrompter v1.86</title>
+    <title>iPrompter v1.87</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;900&display=swap');
 
@@ -136,6 +136,13 @@
             background: #ffffff;
         }
 
+        .json-loaded-path {
+            flex-basis: 100%;
+            text-align: right;
+            color: rgba(255, 255, 255, 0.78);
+            font: 600 0.78rem/1.45 ui-monospace, SFMono-Regular, Consolas, monospace;
+            overflow-wrap: anywhere;
+        }
         .json-save-btn:disabled,
         .json-file-select:disabled {
             opacity: 0.4;
@@ -854,9 +861,9 @@
 
     </style>
 </head>
-<body class="">
-    <div id="setup-container" class="">
-        <h1>iPrompter <span class="app-version">v1.86</span></h1>
+<body>
+    <div id="setup-container">
+        <h1>iPrompter <span class="app-version">v1.87</span></h1>
         
                 <textarea id="script-input" placeholder="여기에 읽을 대본을 입력하세요...">Hello.
 My name is So-Yeon Kim.
@@ -907,11 +914,17 @@ I will do good recycling
 every day.
 I want to tell my friends
 to protect nature too.
+Also, we can start with very easy things.
+For example, you can bring a small bag
+when you go for a walk.
+If everyone picks up just one piece of trash,
+the earth will smile.
+Saving the earth is in our hands right now.
+Let's make our beautiful town shine together.
 One person's small step
 can make our town clean.
 Our small step today
-gives clean nature
-to the future.
+gives clean nature to the future.
 Thank you for listening.</textarea>
         
         <div class="time-settings">
@@ -949,15 +962,15 @@ Thank you for listening.</textarea>
         </div>
         <div class="start-actions">
             <button class="start-btn practice-start-btn" onclick="startPractice()">연습 시작</button>
-            <button class="start-btn" onclick="startPrompter(true)">프롬프터 시작 v1.86</button>
+            <button class="start-btn" onclick="startPrompter(true)">프롬프터 시작 v1.87</button>
         </div>
     </div>
 
-    <div id="prompter-container" class="">
+    <div id="prompter-container">
         <!-- 상단 고정 타이머 -->
         <div id="center-guide-line" aria-hidden="true"></div>
-        <div id="edge-glow" class="left pulse" aria-hidden="true"></div>
-        <div id="fixed-timer" style="top: 86.4px;">00:00.43</div>
+        <div id="edge-glow" class="left" aria-hidden="true"></div>
+        <div id="fixed-timer">00:00.00</div>
         
         <div id="text-display"></div>
 
@@ -972,8 +985,8 @@ Thank you for listening.</textarea>
             <button class="control-btn compact-label" onclick="changeTextSize(-1)" title="글자 작게" aria-label="글자 작게">A−</button>
             <button class="control-btn compact-label" onclick="changeTextSize(1)" title="글자 크게" aria-label="글자 크게">A＋</button>
             <button class="control-btn compact-label" id="flip-horizontal-btn" onclick="toggleHorizontalFlip()" title="좌우 반전" aria-label="좌우 반전" aria-pressed="false">좌우</button>
-            <button class="control-btn compact-label is-active" id="flip-vertical-btn" onclick="toggleVerticalFlip()" title="상하 반전" aria-label="상하 반전" aria-pressed="true">상하</button>
-            <button class="control-btn" id="play-pause-btn" onclick="pause()" title="일시정지" aria-label="일시정지" disabled="">
+            <button class="control-btn compact-label" id="flip-vertical-btn" onclick="toggleVerticalFlip()" title="상하 반전" aria-label="상하 반전" aria-pressed="false">상하</button>
+            <button class="control-btn" id="play-pause-btn" onclick="togglePlayback()" title="일시정지" aria-label="일시정지">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="black"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>
             </button>
             
@@ -989,12 +1002,12 @@ Thank you for listening.</textarea>
         </div>
     </div>
 
-    <div id="countdown-overlay" class="">
-        <div id="countdown-number" class="animate">1</div>
+    <div id="countdown-overlay">
+        <div id="countdown-number">5</div>
     </div>
 
     <div id="progress-container">
-        <div id="progress-bar" style="width: 99.5874%;"></div>
+        <div id="progress-bar"></div>
     </div>
 
     <script>
@@ -1063,6 +1076,7 @@ Thank you for listening.</textarea>
         const jsonFolderInput = document.getElementById('json-folder-input');
         const jsonFileSelect = document.getElementById('json-file-select');
         const jsonSaveButton = document.getElementById('json-save-btn');
+        const jsonLoadedPath = document.getElementById('json-loaded-path');
         const htmlCopyButton = document.getElementById('html-copy-btn');
         const htmlDownloadBtn = document.getElementById('html-download-btn');
         const controlsContainer = document.getElementById('controls-container');
@@ -1191,9 +1205,17 @@ Thank you for listening.</textarea>
             if (htmlDownloadBtn) htmlDownloadBtn.disabled = false;
         }
 
-        async function loadJsonFile(file, fileHandle) {
+        function showLoadedJsonPath(path) {
+            if (!jsonLoadedPath) return;
+            const visiblePath = String(path || '').replace(/^[A-Za-z]:\\fakepath\\/i, '') || '경로를 확인할 수 없음';
+            jsonLoadedPath.textContent = `불러온 JSON: ${visiblePath}`;
+            jsonLoadedPath.title = visiblePath;
+        }
+
+        async function loadJsonFile(file, fileHandle, displayPath = '') {
             const data = JSON.parse(normalizeJsonText(await file.text()));
             applyLoadedJson(data, file.name, fileHandle);
+            showLoadedJsonPath(displayPath || file.path || file.webkitRelativePath || file.name);
         }
 
         function populateJsonFileSelect(fileNames) {
@@ -1409,7 +1431,9 @@ Thank you for listening.</textarea>
             const file = event.target.files[0];
             if (!file) return;
             try {
-                await loadJsonFile(file, null);
+                const pickerPath = String(event.target.value || '');
+                const displayPath = file.path || file.webkitRelativePath || (/^[A-Za-z]:\\fakepath\\/i.test(pickerPath) ? file.name : pickerPath) || file.name;
+                await loadJsonFile(file, null, displayPath);
             } catch (error) {
                 alert(`JSON 파일을 읽을 수 없습니다.\n${error.message}`);
             } finally {
@@ -1436,13 +1460,15 @@ Thank you for listening.</textarea>
             try {
                 const isFileHandle = typeof selectedEntry.getFile === 'function';
                 const file = isFileHandle ? await selectedEntry.getFile() : selectedEntry;
-                await loadJsonFile(file, isFileHandle ? selectedEntry : null);
+                const folderName = jsonDirectoryHandle?.name || rememberedJsonDirectoryHandle?.name || '';
+                const displayPath = file.path || file.webkitRelativePath || (folderName ? `${folderName}/${file.name}` : file.name);
+                await loadJsonFile(file, isFileHandle ? selectedEntry : null, displayPath);
             } catch (error) {
                 alert(`선택한 JSON 파일을 읽을 수 없습니다.\n${error.message}`);
             }
         });
 
-        scriptInput.value = "Hello.\nMy name is So-Yeon Kim.\nI am in the fifth grade\nat Jae-Reung Elementary School.\nOne day,\nI had a very special time.\nI did plogging\nwith our principal, teachers, and friends.\nWe did it right in front of our school.\nWe walk by that street\nevery single day.\nBut when I looked close,\nI was so surprised.\nThere was a lot of trash\nand many cigarette butts\non the ground.\nBefore that,\nif I saw trash,\nI just walked past it.\nI did not pay any mind\nto it.\nWhile picking up trash with friends,\nmy mind changed.\nI learned a big lesson.\nOne small piece of trash\nfrom one person\nadds up fast.\nAll those pieces\nmake our street dirty\nin no time.\nNot throwing trash away\nis more important\nthan picking it up.\nNow,\nI care about the street.\nOne small step\ncan make our school and town clean.\nPlogging is a great sport\nand helps the earth.\nI hope more people\ncan join this good work.\nI want to be a student\nwho keeps my town clean.\nI will not drop trash\non the floor.\nI will do good recycling\nevery day.\nI want to tell my friends\nto protect nature too.\nOne person's small step\ncan make our town clean.\nOur small step today\ngives clean nature\nto the future.\nThank you for listening.";
+        scriptInput.value = "Hello.\nMy name is So-Yeon Kim.\nI am in the fifth grade\nat Jae-Reung Elementary School.\nOne day,\nI had a very special time.\nI did plogging\nwith our principal, teachers, and friends.\nWe did it right in front of our school.\nWe walk by that street\nevery single day.\nBut when I looked close,\nI was so surprised.\nThere was a lot of trash\nand many cigarette butts\non the ground.\nBefore that,\nif I saw trash,\nI just walked past it.\nI did not pay any mind\nto it.\nWhile picking up trash with friends,\nmy mind changed.\nI learned a big lesson.\nOne small piece of trash\nfrom one person\nadds up fast.\nAll those pieces\nmake our street dirty\nin no time.\nNot throwing trash away\nis more important\nthan picking it up.\nNow,\nI care about the street.\nOne small step\ncan make our school and town clean.\nPlogging is a great sport\nand helps the earth.\nI hope more people\ncan join this good work.\nI want to be a student\nwho keeps my town clean.\nI will not drop trash\non the floor.\nI will do good recycling\nevery day.\nI want to tell my friends\nto protect nature too.\nAlso, we can start with very easy things.\nFor example, you can bring a small bag\nwhen you go for a walk.\nIf everyone picks up just one piece of trash,\nthe earth will smile.\nSaving the earth is in our hands right now.\nLet's make our beautiful town shine together.\nOne person's small step\ncan make our town clean.\nOur small step today\ngives clean nature to the future.\nThank you for listening.";
 
         // 프리셋 설정 함수
 
@@ -1865,7 +1891,7 @@ Thank you for listening.</textarea>
                     prompterContainer.scrollTop = maxScroll;
                     updateTimerDisplay(totalDurationMs);
                     releaseWakeLock();
-                    playPauseBtn.disabled = true;
+                    updatePlaybackButton(false, true);
                 }
             }
         }
@@ -1878,15 +1904,36 @@ Thank you for listening.</textarea>
             return pausedTime;
         }
 
+        function updatePlaybackButton(playing, disabled = false) {
+            if (!playPauseBtn) return;
+            playPauseBtn.disabled = disabled;
+            playPauseBtn.title = playing ? '일시정지' : '재개';
+            playPauseBtn.setAttribute('aria-label', playing ? '일시정지' : '재개');
+            playPauseBtn.innerHTML = playing
+                ? '<svg width="24" height="24" viewBox="0 0 24 24" fill="black"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>'
+                : '<svg width="24" height="24" viewBox="0 0 24 24" fill="black"><path d="M8 5v14l11-7z"/></svg>';
+        }
+
         function play() {
             if (!isPlaying) {
                 isPlaying = true;
-                playPauseBtn.disabled = false;
+                updatePlaybackButton(true);
                 requestWakeLock();
                 startTime = null;
                 lastRenderTimestamp = 0;
                 animationId = requestAnimationFrame(step);
             }
+        }
+
+        function togglePlayback() {
+            if (isCountingDown) return;
+            if (isPlaying) {
+                pause();
+                return;
+            }
+            const totalDurationMs = (parseInt(minutesInput.value || 0) * 60
+                + parseInt(secondsInput.value || 0)) * 1000;
+            if (totalDurationMs > 0 && pausedTime < totalDurationMs) play();
         }
 
 
@@ -1915,7 +1962,7 @@ Thank you for listening.</textarea>
             cancelAnimationFrame(animationId);
             pausedTime = elapsedAtPause;
             startTime = null;
-            playPauseBtn.disabled = true;
+            updatePlaybackButton(false);
             releaseWakeLock();
         }
 
@@ -1957,12 +2004,48 @@ Thank you for listening.</textarea>
             progressBar.style.width = `${(1 - pausedTime / totalMs) * 100}%`;
         }
 
+        function syncPausedPositionFromScroll() {
+            if (isPlaying || isCountingDown || !prompterContainer.classList.contains('active')) return;
+            const totalMs = (parseInt(minutesInput.value || 0) * 60
+                + parseInt(secondsInput.value || 0)) * 1000;
+            const maxScroll = Math.max(0,
+                prompterContainer.scrollHeight - prompterContainer.clientHeight
+            );
+            if (totalMs <= 0 || maxScroll <= 0) return;
+
+            const scrollRatio = Math.max(0, Math.min(1, prompterContainer.scrollTop / maxScroll));
+            pausedTime = scrollRatio * totalMs;
+            updateTimerDisplay(pausedTime);
+            progressBar.style.width = `${(1 - scrollRatio) * 100}%`;
+
+            let targetIndex = 0;
+            for (let index = 0; index < scrollLinesData.length; index++) {
+                const line = scrollLinesData[index];
+                targetIndex = index;
+                if (pausedTime < line.startTime + line.duration) break;
+            }
+            updateActiveLine(targetIndex);
+            renderedActiveLineIndex = targetIndex;
+            updateTimerPosition(targetIndex);
+            updatePlaybackButton(false, pausedTime >= totalMs);
+        }
+
+        let scrollPositionSyncFrame = 0;
+        prompterContainer.addEventListener('scroll', () => {
+            if (isPlaying || isCountingDown) return;
+            cancelAnimationFrame(scrollPositionSyncFrame);
+            scrollPositionSyncFrame = requestAnimationFrame(syncPausedPositionFromScroll);
+        }, { passive: true });
+
         // 사용자가 수동으로 스크롤하면 자동 스크롤 일시 정지
-        prompterContainer.addEventListener('touchstart', event => {
+        const pauseForManualScroll = event => {
             if (event.target.closest('#controls-container')) return;
             if (!isPrompterMode && practiceMaskPercent && event.target.closest('.text-line')) return;
             if (isPlaying) pause();
-        }, { passive: true });
+        };
+        prompterContainer.addEventListener('touchstart', pauseForManualScroll, { passive: true });
+        prompterContainer.addEventListener('wheel', pauseForManualScroll, { passive: true });
+        prompterContainer.addEventListener('pointerdown', pauseForManualScroll, { passive: true });
 
         function refreshLayout() {
             if (!prompterContainer.classList.contains('active')) return;
